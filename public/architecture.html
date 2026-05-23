@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIS — System Architecture</title>
+<script>
+(function(){try{const t=localStorage.getItem('vis-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+(function(){try{const s=localStorage.getItem('vis-stadium')||'narendra-modi';document.documentElement.setAttribute('data-stadium',s);}catch(e){}})();
+</script>
 <style>
 :root{
   --bg:#060b14;--bg2:#0d1626;--bg3:#111e35;
@@ -11,15 +15,34 @@
   --orange:#ff9500;--red:#ff4444;--green:#22c55e;
   --yellow:#fbbf24;--text:#e0f0ff;--muted:#7a9ab5;
   --border:rgba(255,255,255,.07);
+  --nav-bg:rgba(6,11,20,.92);
+}
+:root[data-theme="light"]{
+  --bg:#f5f7fb;--bg2:#ffffff;--bg3:#eef2f8;
+  --blue:#0284c7;--teal:#0891b2;--purple:#7c3aed;
+  --orange:#ea580c;--red:#dc2626;--green:#16a34a;
+  --yellow:#d97706;--text:#0f172a;--muted:#64748b;
+  --border:rgba(15,23,42,.10);
+  --nav-bg:rgba(255,255,255,.85);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;min-height:100vh;transition:background .3s,color .3s}
 
 /* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--nav-bg);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;transition:background .3s,border-color .3s}
 .nav-back{display:flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;font-size:.82rem;transition:color .2s}
-.nav-back:hover{color:#fff}
+.nav-back:hover{color:var(--text)}
+.stadium-picker-wrap{position:relative}
+.stadium-picker{appearance:none;-webkit-appearance:none;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.74rem;font-weight:600;padding:5px 24px 5px 10px;border-radius:16px;cursor:pointer;transition:all .25s;max-width:220px}
+.stadium-picker:hover{border-color:rgba(0,170,255,.4)}
+.stadium-picker:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,170,255,.15)}
+.stadium-picker-wrap::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.65rem;pointer-events:none}
+.stadium-picker option{background:var(--bg2);color:var(--text)}
+.theme-toggle{display:inline-flex;align-items:center;gap:0;background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:2px;transition:background .3s,border-color .3s}
+.theme-toggle button{background:transparent;border:0;cursor:pointer;color:var(--muted);font-size:.72rem;padding:4px 9px;border-radius:14px;display:inline-flex;align-items:center;gap:3px;font-family:inherit;font-weight:600;transition:all .25s}
+.theme-toggle button.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 2px 8px -2px rgba(0,170,255,.4)}
+.theme-toggle button:not(.active):hover{color:var(--text)}
 .nav-title{font-size:.9rem;font-weight:700;background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:.68rem;padding:4px 10px;border-radius:20px;letter-spacing:1px}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
@@ -29,6 +52,34 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 .page-header{text-align:center;padding:80px 20px 24px;position:relative}
 .page-header h1{font-size:clamp(1.5rem,4vw,2.6rem);font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--blue),var(--purple),var(--teal));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradShift 5s linear infinite}
 .page-header p{color:var(--muted);font-size:.9rem;margin-top:8px;letter-spacing:.5px}
+
+/* Hierarchical Orchestrator Tree */
+.orch-wrap{max-width:1180px;margin:32px auto 8px;padding:0 24px}
+.orch-box{background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(0,170,255,.04));border:1px solid rgba(168,85,247,.25);border-radius:16px;padding:24px}
+.orch-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.orch-tag{font-size:.7rem;font-weight:800;color:var(--purple);letter-spacing:2px}
+.orch-title{font-size:1.15rem;font-weight:700;color:var(--text)}
+.orch-sub{color:var(--muted);font-size:.78rem}
+.orch-tree{display:flex;flex-direction:column;align-items:center;gap:0}
+.orch-master{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;padding:14px 28px;border-radius:12px;font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(168,85,247,.25)}
+.orch-master .crown{font-size:1.2rem}
+.orch-master .o-meta{font-size:.65rem;font-weight:600;letter-spacing:1px;opacity:.85;margin-left:8px;border-left:1px solid rgba(255,255,255,.3);padding-left:10px}
+.orch-connector{width:2px;height:24px;background:linear-gradient(180deg,var(--purple),rgba(168,85,247,.2))}
+.orch-bus{height:2px;background:rgba(168,85,247,.4);width:80%;max-width:760px;position:relative}
+.orch-children{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%;margin-top:0}
+.orch-child-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.orch-drop{width:2px;height:18px;background:rgba(168,85,247,.4)}
+.orch-child{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:10px;padding:12px 14px;width:100%;transition:all .2s;cursor:default}
+.orch-child:hover{transform:translateY(-2px);border-left-color:var(--blue);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.orch-child.safety{border-left-color:var(--red)}
+.orch-child.emergency{border-left-color:var(--orange)}
+.orch-child.vision{border-left-color:var(--teal)}
+.orch-child.experience{border-left-color:var(--blue)}
+.oc-name{font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.oc-role{font-size:.7rem;color:var(--muted);line-height:1.4;margin-bottom:6px}
+.oc-stat{font-size:.65rem;letter-spacing:.5px;color:var(--purple);font-weight:600}
+.oc-status{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.6s infinite}
+@media(max-width:780px){.orch-children{grid-template-columns:repeat(2,1fr)}}
 @keyframes gradShift{0%{background-position:0%}100%{background-position:200%}}
 
 /* STATS BAR */
@@ -147,11 +198,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 .node-output .node-pulse{background:var(--green);box-shadow:0 0 6px var(--green)}
 .node-output:hover{box-shadow:0 0 20px rgba(34,197,94,.15)}
 
-/* FLOW ARROWS */
-.flow-arrow{display:flex;justify-content:center;align-items:center;padding:6px 0;position:relative;height:44px}
-.arrow-line{width:2px;height:100%;background:linear-gradient(180deg,transparent,rgba(80,120,180,.5),transparent);position:relative;margin:0 auto}
-.arrow-line::after{content:'▼';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);color:rgba(80,120,180,.7);font-size:.65rem}
-.flow-label{position:absolute;left:50%;transform:translateX(-50%);background:rgba(6,11,20,.9);border:1px solid var(--border);color:var(--muted);font-size:.58rem;padding:2px 10px;border-radius:10px;white-space:nowrap;letter-spacing:.5px}
+/* FLOW ARROWS — with traveling data particle */
+.flow-arrow{display:flex;justify-content:center;align-items:center;padding:6px 0;position:relative;height:54px}
+.arrow-line{width:2px;height:100%;background:linear-gradient(180deg,transparent,rgba(80,160,255,.5),transparent);position:relative;margin:0 auto;overflow:visible}
+.arrow-line::before{content:'';position:absolute;left:50%;top:0;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#7ee8ff 0%,rgba(0,170,255,.6) 50%,transparent 80%);transform:translateX(-50%);box-shadow:0 0 12px rgba(0,170,255,.7);animation:flowDot 2.6s linear infinite}
+.arrow-line::after{content:'▼';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);color:rgba(80,160,255,.85);font-size:.65rem}
+@keyframes flowDot{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+.flow-label{position:absolute;left:50%;transform:translateX(-50%);background:rgba(6,11,20,.92);border:1px solid var(--border);color:var(--muted);font-size:.58rem;padding:3px 10px;border-radius:10px;white-space:nowrap;letter-spacing:.5px;backdrop-filter:blur(8px)}
+
+/* Scroll-reveal layers — fade up on intersect */
+.layer{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;position:relative}
+.layer.in-view{opacity:1;transform:none}
+.layer:hover{box-shadow:0 18px 50px -22px rgba(0,170,255,.35);border-color:rgba(0,170,255,.28)}
+.layer::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(0,170,255,.06) 50%,transparent 70%);opacity:0;transition:opacity .35s}
+.layer:hover::after{opacity:1}
+/* Layer-title shimmer on hover */
+.layer-title{position:relative;display:inline-flex;align-items:center;gap:8px}
+.layer:hover .layer-title{text-shadow:0 0 18px currentColor}
+
+/* Node hover micro-interaction */
+.node{position:relative;overflow:hidden}
+.node::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.08) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s ease;pointer-events:none}
+.node:hover::after{transform:translateX(120%)}
+.api-node{position:relative;overflow:hidden}
+.api-node::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.07) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s ease;pointer-events:none}
+.api-node:hover::after{transform:translateX(120%)}
+
+/* Orchestrator card: animated conic halo on hover */
+@property --orchAng{syntax:'<angle>';initial-value:0deg;inherits:false}
+.orch-box{position:relative;overflow:hidden}
+.orch-box::before{content:'';position:absolute;inset:-1px;border-radius:16px;padding:1px;background:conic-gradient(from var(--orchAng,0deg),transparent 0deg,rgba(168,85,247,.6) 90deg,rgba(0,170,255,.5) 180deg,transparent 270deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s;animation:orchSpin 10s linear infinite;pointer-events:none}
+.orch-box:hover::before{opacity:1}
+@keyframes orchSpin{to{--orchAng:360deg}}
 
 /* CODEBASE TREE */
 .code-tree{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin:32px auto;max-width:900px;font-family:monospace;font-size:.75rem;line-height:2}
@@ -215,13 +293,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 <nav>
   <a class="nav-back" href="index.html">← Back to VIS</a>
   <div class="nav-title">System Architecture</div>
-  <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="stadium-picker-wrap" title="Active venue">
+      <select id="stadium-picker" class="stadium-picker" aria-label="Stadium"></select>
+    </div>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+      <button data-theme-val="dark" class="active">🌙 Dark</button>
+      <button data-theme-val="light">☀️ Light</button>
+    </div>
+    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  </div>
 </nav>
 
 <!-- HEADER -->
 <div class="page-header">
   <h1>⚡ Venue Intelligence System</h1>
-  <p>Full system architecture · 5 layers · 3 AI agents · 284 sensors · 96 cameras</p>
+  <p>Full system architecture · 7 layers · 7 AI agents · <span data-cap-sensors>284</span> sensors · <span data-cap-cameras>96</span> cameras</p>
 </div>
 
 <!-- STATS BAR -->
@@ -229,9 +316,61 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
   <div class="stat-chip"><div class="val" id="s-attendees" style="color:var(--blue)">72,441</div><div class="lbl">Attendees Live</div></div>
   <div class="stat-chip"><div class="val" id="s-sensors" style="color:var(--teal)">284</div><div class="lbl">Sensors Active</div></div>
   <div class="stat-chip"><div class="val" id="s-cameras" style="color:#5090ff">96</div><div class="lbl">Cameras Online</div></div>
-  <div class="stat-chip"><div class="val" id="s-agents" style="color:var(--purple)">3</div><div class="lbl">AI Agents</div></div>
+  <div class="stat-chip"><div class="val" id="s-agents" style="color:var(--purple)">7</div><div class="lbl">AI Agents</div></div>
   <div class="stat-chip"><div class="val" id="s-events" style="color:var(--orange)">0</div><div class="lbl">Events / Min</div></div>
   <div class="stat-chip"><div class="val" id="s-alerts" style="color:var(--red)">0</div><div class="lbl">Active Alerts</div></div>
+</div>
+
+<!-- HIERARCHICAL ORCHESTRATOR -->
+<div class="orch-wrap">
+  <div class="orch-box">
+    <div class="orch-h">
+      <div>
+        <div class="orch-tag">AGENTIC HIERARCHY</div>
+        <div class="orch-title">Master Orchestrator → Specialist Agents</div>
+      </div>
+      <div class="orch-sub">Routes incidents · resolves agent conflicts · weighs trade-offs</div>
+    </div>
+    <div class="orch-tree">
+      <div class="orch-master">
+        <span class="crown">👑</span>
+        <span>Master Orchestrator</span>
+        <span class="o-meta">gemini-3-pro · 0 conflicts open</span>
+      </div>
+      <div class="orch-connector"></div>
+      <div class="orch-bus"></div>
+      <div class="orch-children">
+        <div class="orch-child-wrap"><div class="orch-drop"></div>
+          <div class="orch-child safety">
+            <div class="oc-name"><span class="oc-status"></span>🛡️ SafetyAgent</div>
+            <div class="oc-role">Veto authority on crowd density &gt; 96%. Owns crush-risk thresholds.</div>
+            <div class="oc-stat">WEIGHT 0.50 · gemini-3-pro</div>
+          </div>
+        </div>
+        <div class="orch-child-wrap"><div class="orch-drop"></div>
+          <div class="orch-child emergency">
+            <div class="oc-name"><span class="oc-status"></span>🚨 EmergencyAgent</div>
+            <div class="oc-role">Medical, security, fire, crowd-crush incidents. Issues PA + dispatch.</div>
+            <div class="oc-stat">WEIGHT 0.45 · gemini-3.1-pro</div>
+          </div>
+        </div>
+        <div class="orch-child-wrap"><div class="orch-drop"></div>
+          <div class="orch-child vision">
+            <div class="oc-name"><span class="oc-status"></span>🎥 VisionAgent</div>
+            <div class="oc-role">Interprets camera frames when CV pipeline flags anomaly &gt; 0.7.</div>
+            <div class="oc-stat">WEIGHT 0.30 · gemini-3.1-pro</div>
+          </div>
+        </div>
+        <div class="orch-child-wrap"><div class="orch-drop"></div>
+          <div class="orch-child experience">
+            <div class="oc-name"><span class="oc-status"></span>⭐ ExperienceAgent</div>
+            <div class="oc-role">Wayfinding, food, accessibility chat. Personalised recommendations.</div>
+            <div class="oc-stat">WEIGHT 0.30 · gemini-3.5-flash</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ARCHITECTURE -->
@@ -349,13 +488,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 
   <div class="flow-arrow"><div class="arrow-line"></div><div class="flow-label">Routed events → Decision Layer</div></div>
 
-  <!-- LAYER 4: DECISION LAYER -->
+  <!-- LAYER 4: PREDICTIVE -->
+  <div class="layer layer-decision" style="border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.04)">
+    <div class="layer-title">🔮 Layer 4 — Predictive Intelligence <span class="layer-tag" style="background:rgba(251,191,36,.12);color:var(--yellow)">FORECAST</span></div>
+    <div class="node-row">
+      <div class="node node-ingest" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25);min-width:260px"
+        data-tip="<strong>Surge Prediction Agent</strong>Projects zone density 5 minutes forward from current state + scenario trajectory. Outputs ETAs ('Gate North will hit 85% in 3:20'), confidence score (87%), and recommended pre-emptive action.<br><code>gemini-2.5-pro</code><br>Trigger: every 6 seconds, on every scenario tick">
+        <div class="node-pulse" style="background:var(--yellow);box-shadow:0 0 6px var(--yellow)"></div>
+        <div class="node-icon">🔮</div>
+        <div class="node-name" style="color:var(--yellow)">Surge Prediction Agent</div>
+        <div class="node-desc">5-min horizon · confidence-rated · pre-emptive</div>
+        <div class="node-file">gemini-2.5-pro</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><div class="arrow-line"></div><div class="flow-label">Forecasts feed routing decisions</div></div>
+
+  <!-- LAYER 5: DECISION LAYER -->
   <div class="layer layer-decision">
-    <div class="layer-title">🎯 Layer 4 — Decision Layer <span class="layer-tag" style="background:rgba(251,191,36,.12);color:var(--yellow)">INTELLIGENCE</span></div>
+    <div class="layer-title">🎯 Layer 5 — Decision Layer <span class="layer-tag" style="background:rgba(251,191,36,.12);color:var(--yellow)">INTELLIGENCE</span></div>
 
     <div class="router-box">
       <strong>Event Router</strong> — api/main.py · _on_alert()<br>
-      <span style="opacity:.7">"critical" / "emergency" → EmergencyAgent · "vision.anomaly" → VisionAgent · attendee WebSocket → AttendeeAgent · everything else → Rule Engine</span>
+      <span style="opacity:.7">"critical" / "emergency" → EmergencyAgent · "vision.anomaly" → VisionAgent · attendee WebSocket → AttendeeAgent · agent conflict → Master Orchestrator · everything else → Rule Engine</span>
     </div>
 
     <div class="decision-split">
@@ -384,36 +540,63 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
         <div class="agent-nodes">
 
           <div class="agent-node attendee" data-id="a-attendee"
-            data-tip="<strong>AttendeeExperienceAgent</strong>Handles fan chat via WebSocket. Multi-turn conversation with full tool use loop. Streams responses token-by-token back to mobile app.<br><code>agents/attendee/agent.py</code><br>Model: gemini-2.5-flash<br>Trigger: WebSocket /ws/attendee/{id}">
+            data-tip="<strong>AttendeeExperienceAgent</strong>Handles fan chat via WebSocket. Multi-turn conversation with full tool use loop. Streams responses token-by-token back to mobile app.<br><code>agents/attendee/agent.py</code><br>Model: gemini-3.1-flash-lite<br>Trigger: WebSocket /ws/attendee/{id}">
             <div class="node-pulse"></div>
-            <div class="an-header"><span class="an-icon">💬</span><div><div class="an-name">AttendeeExperienceAgent</div><div class="an-model">gemini-2.5-flash · Streaming · WebSocket</div></div></div>
+            <div class="an-header"><span class="an-icon">💬</span><div><div class="an-name">AttendeeExperienceAgent</div><div class="an-model">gemini-3.1-flash-lite · Streaming · WebSocket</div></div></div>
             <div class="an-tools"><span class="agent-tool">lookup_seat</span><span class="agent-tool">get_queue_wait</span><span class="agent-tool">find_nearest_amenity</span><span class="agent-tool">place_food_order</span><span class="agent-tool">request_accessibility_help</span></div>
           </div>
 
           <div class="agent-node emergency" data-id="a-emergency"
-            data-tip="<strong>EmergencyResponseAgent</strong>Fires on any 'critical' or 'emergency' event from the event bus. Uses Opus 4.7 because each emergency is a novel combination of factors no ruleset covers.<br><code>agents/emergency/agent.py</code><br>Model: gemini-2.5-pro · max_tokens: 2048<br>Trigger: alert.critical.* or alert.emergency.*">
+            data-tip="<strong>EmergencyResponseAgent</strong>Fires on any 'critical' or 'emergency' event from the event bus. Uses gemini-3.1-pro because each emergency is a novel combination of factors no ruleset covers.<br><code>agents/emergency/agent.py</code><br>Model: gemini-3.1-pro · max_tokens: 2048<br>Trigger: alert.critical.* or alert.emergency.*">
             <div class="node-pulse"></div>
-            <div class="an-header"><span class="an-icon">🚨</span><div><div class="an-name" style="color:#ff9999">EmergencyResponseAgent</div><div class="an-model">gemini-2.5-pro · 2048 tokens · Adaptive</div></div></div>
+            <div class="an-header"><span class="an-icon">🚨</span><div><div class="an-name" style="color:#ff9999">EmergencyResponseAgent</div><div class="an-model">gemini-3.1-pro · 2048 tokens · Adaptive</div></div></div>
             <div class="an-tools"><span class="agent-tool">get_venue_state</span><span class="agent-tool">get_evacuation_routes</span><span class="agent-tool">activate_pa_announcement</span><span class="agent-tool">contact_emergency_services</span><span class="agent-tool">trigger_zone_evacuation</span><span class="agent-tool">dispatch_medical_team</span></div>
           </div>
 
           <div class="agent-node vision" data-id="a-vision"
-            data-tip="<strong>VisionAnomalyAgent</strong>Receives CameraFrame when anomaly_score > 0.7. Sends base64 image + CV metadata to Gemini Vision. Returns structured JSON: headcount_estimate, density_level, safety_concerns, risk_score, recommended_action.<br><code>agents/vision_anomaly/agent.py</code><br>Model: gemini-2.5-flash + Vision<br>Trigger: alert.vision.anomaly">
+            data-tip="<strong>VisionAnomalyAgent</strong>Receives CameraFrame when anomaly_score > 0.7. Sends base64 image + CV metadata to Gemini Vision. Returns structured JSON: headcount_estimate, density_level, safety_concerns, risk_score, recommended_action.<br><code>agents/vision_anomaly/agent.py</code><br>Model: gemini-3.1-pro + Vision<br>Trigger: alert.vision.anomaly">
             <div class="node-pulse"></div>
-            <div class="an-header"><span class="an-icon">👁️</span><div><div class="an-name" style="color:#80f0d0">VisionAnomalyAgent</div><div class="an-model">gemini-2.5-flash + Vision · anomaly_score &gt; 0.7</div></div></div>
+            <div class="an-header"><span class="an-icon">👁️</span><div><div class="an-name" style="color:#80f0d0">VisionAnomalyAgent</div><div class="an-model">gemini-3.1-pro + Vision · anomaly_score &gt; 0.7</div></div></div>
             <div class="an-tools"><span class="agent-tool">analyse_frame</span><span class="agent-tool">assess_safety_risk</span><span class="agent-tool">recommend_action</span></div>
           </div>
 
         </div>
       </div>
     </div>
+
+    <!-- TRADE-OFF AGENTS + ORCHESTRATOR -->
+    <div style="margin-top:24px;background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(0,170,255,.04));border:1px solid rgba(168,85,247,.25);border-radius:14px;padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="color:var(--purple);font-size:.72rem;font-weight:800;letter-spacing:1.5px">⚖️ TRADE-OFF AGENTS → 👑 MASTER ORCHESTRATOR · 5%</div>
+        <div style="font-size:.65rem;color:var(--muted);font-family:monospace">orchestrator/ · gemini-3-pro</div>
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);line-height:1.5;margin-bottom:14px">Fires only when specialist agents disagree. Three role-based agents argue their stance; Master Orchestrator weighs them and publishes the binding resolution. Demo runs live in the Multi-Agent Negotiation panel on the main dashboard.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <div class="agent-node" style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.25)">
+          <div class="an-header"><span class="an-icon">🛡️</span><div><div class="an-name" style="color:#ff9999">SafetyAgent</div><div class="an-model">gemini-3-pro · weight 0.50</div></div></div>
+          <div style="font-size:.66rem;color:var(--muted);line-height:1.5">Veto authority on density &gt; 96%. Owns crush-risk thresholds.</div>
+        </div>
+        <div class="agent-node" style="background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.25)">
+          <div class="an-header"><span class="an-icon">⚙️</span><div><div class="an-name" style="color:#ffb060">OperationsAgent</div><div class="an-model">gemini-3.5-flash · weight 0.20</div></div></div>
+          <div style="font-size:.66rem;color:var(--muted);line-height:1.5">Staff workload, shift rotation, deployment sustainability.</div>
+        </div>
+        <div class="agent-node" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25)">
+          <div class="an-header"><span class="an-icon">⭐</span><div><div class="an-name" style="color:#80f0ff">ExperienceAgent</div><div class="an-model">gemini-3.5-flash · weight 0.30</div></div></div>
+          <div style="font-size:.66rem;color:var(--muted);line-height:1.5">Proposes compromise paths. Attendee-side advocate.</div>
+        </div>
+        <div class="agent-node" style="background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(0,170,255,.1));border:1px solid rgba(168,85,247,.4)">
+          <div class="an-header"><span class="an-icon">👑</span><div><div class="an-name" style="background:linear-gradient(90deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Master Orchestrator</div><div class="an-model">gemini-3-pro · binding resolution</div></div></div>
+          <div style="font-size:.66rem;color:var(--muted);line-height:1.5">Weighs stances, publishes resolution, audits the call.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="flow-arrow"><div class="arrow-line"></div><div class="flow-label">Rule actions + Agent responses → FastAPI</div></div>
+  <div class="flow-arrow"><div class="arrow-line"></div><div class="flow-label">Rule actions + Agent responses + Orchestrator resolutions → FastAPI</div></div>
 
-  <!-- LAYER 5: API -->
+  <!-- LAYER 6: API -->
   <div class="layer layer-api">
-    <div class="layer-title">🚀 Layer 5 — API Layer <span class="layer-tag">api/</span></div>
+    <div class="layer-title">🚀 Layer 6 — API Layer <span class="layer-tag">api/</span></div>
     <div class="api-grid">
       <div class="api-node" data-id="api-events"
         data-tip="<strong>Sensor Events Route</strong>Accepts inbound sensor data from real hardware or simulator. Calls core/ingestion.py which gates, enriches, and publishes to event bus.<br><code>api/routes/events.py</code><br><code>POST /events/sensor</code><br><code>POST /events/camera</code>">
@@ -451,7 +634,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 
   <!-- LAYER 6 -->
   <div class="layer layer-outputs">
-    <div class="layer-title">📤 Layer 6 — Real-World Outputs <span class="layer-tag">ACTIONS</span></div>
+    <div class="layer-title">📤 Layer 7 — Real-World Outputs <span class="layer-tag">ACTIONS</span></div>
     <div class="node-row">
       <div class="node node-output"
         data-tip="<strong>Attendee Mobile App</strong>Receives streamed AI responses via WebSocket. Displays chat, seat directions, food order confirmations, queue wait times, and accessibility help.">
@@ -527,6 +710,72 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,11,20,.92)
 </div>
 
 <script>
+// ── STADIUM SELECTOR (mirrors index.html) ────────────────────────────────────
+const STADIUMS = [
+  {id:'narendra-modi',  name:'Narendra Modi Stadium',  city:'Ahmedabad',     capacity:132000, gates:13, parking:3000, foodCourts:24},
+  {id:'eden-gardens',   name:'Eden Gardens',           city:'Kolkata',       capacity:68000,  gates:8,  parking:1500, foodCourts:14},
+  {id:'raipur',         name:'Shaheed VN Singh',       city:'Raipur',        capacity:65000,  gates:10, parking:1400, foodCourts:13},
+  {id:'dy-patil',       name:'DY Patil Stadium',       city:'Navi Mumbai',   capacity:55000,  gates:9,  parking:1200, foodCourts:12},
+  {id:'ekana',          name:'Ekana (BRSABV) Stadium', city:'Lucknow',       capacity:47165,  gates:8,  parking:1000, foodCourts:11},
+  {id:'barabati',       name:'Barabati Stadium',       city:'Cuttack',       capacity:45000,  gates:7,  parking:900,  foodCourts:10},
+  {id:'vidarbha',       name:'Vidarbha Stadium',       city:'Nagpur',        capacity:45000,  gates:7,  parking:900,  foodCourts:10},
+  {id:'arun-jaitley',   name:'Arun Jaitley Stadium',   city:'Delhi',         capacity:41000,  gates:6,  parking:800,  foodCourts:9},
+  {id:'jln-kochi',      name:'JLN Stadium',            city:'Kochi',         capacity:41000,  gates:6,  parking:800,  foodCourts:9},
+  {id:'chinnaswamy',    name:'M. Chinnaswamy Stadium', city:'Bengaluru',     capacity:40000,  gates:6,  parking:600,  foodCourts:8},
+  {id:'barsapara',      name:'Barsapara Stadium',      city:'Guwahati',      capacity:38000,  gates:6,  parking:700,  foodCourts:8},
+  {id:'chepauk',        name:'MA Chidambaram Stadium', city:'Chennai',       capacity:37505,  gates:5,  parking:700,  foodCourts:8},
+  {id:'mca-pune',       name:'MCA Stadium',            city:'Pune',          capacity:37000,  gates:5,  parking:700,  foodCourts:8},
+  {id:'wankhede',       name:'Wankhede Stadium',       city:'Mumbai',        capacity:33100,  gates:5,  parking:500,  foodCourts:7},
+  {id:'mohali',         name:'PCA IS Bindra Stadium',  city:'Mohali',        capacity:31150,  gates:6,  parking:600,  foodCourts:7},
+  {id:'sawai-mansingh', name:'Sawai Mansingh Stadium', city:'Jaipur',        capacity:30000,  gates:4,  parking:400,  foodCourts:6},
+  {id:'holkar',         name:'Holkar Stadium',         city:'Indore',        capacity:30000,  gates:5,  parking:500,  foodCourts:6},
+  {id:'saurashtra',     name:'Saurashtra Stadium',     city:'Rajkot',        capacity:28000,  gates:5,  parking:500,  foodCourts:6},
+  {id:'aca-vdca',       name:'ACA-VDCA Stadium',       city:'Visakhapatnam', capacity:27000,  gates:5,  parking:450,  foodCourts:6},
+  {id:'hpca',           name:'HPCA Stadium',           city:'Dharamshala',   capacity:21200,  gates:4,  parking:200,  foodCourts:5},
+  {id:'brabourne',      name:'Brabourne Stadium',      city:'Mumbai',        capacity:20000,  gates:4,  parking:300,  foodCourts:5},
+];
+STADIUMS.forEach(s=>{ s.sensors=Math.round(s.capacity/250); s.cameras=Math.round(s.capacity/750); });
+
+function applyStadium(id){
+  const s=STADIUMS.find(x=>x.id===id)||STADIUMS[0];
+  document.documentElement.setAttribute('data-stadium', s.id);
+  document.title=`VIS Architecture — ${s.name}`;
+  const sa=document.getElementById('s-attendees'); if(sa) sa.textContent=s.capacity.toLocaleString();
+  const ss=document.getElementById('s-sensors');   if(ss) ss.textContent=s.sensors.toLocaleString();
+  const sc=document.getElementById('s-cameras');   if(sc) sc.textContent=s.cameras.toLocaleString();
+  document.querySelectorAll('[data-cap-sensors]').forEach(el=>el.textContent=s.sensors.toLocaleString());
+  document.querySelectorAll('[data-cap-cameras]').forEach(el=>el.textContent=s.cameras.toLocaleString());
+  try{localStorage.setItem('vis-stadium', s.id);}catch(_){}
+}
+(function initStadiumPicker(){
+  const picker=document.getElementById('stadium-picker');if(!picker)return;
+  picker.innerHTML=STADIUMS.map(s=>`<option value="${s.id}">🏟️ ${s.name} · ${s.city} (${Math.round(s.capacity/1000)}K)</option>`).join('');
+  const saved=localStorage.getItem('vis-stadium')||'narendra-modi';
+  picker.value=STADIUMS.some(s=>s.id===saved)?saved:'narendra-modi';
+  picker.addEventListener('change',()=>applyStadium(picker.value));
+  applyStadium(picker.value);
+})();
+
+// THEME TOGGLE
+(function initTheme(){
+  const root=document.documentElement;
+  const current=root.getAttribute('data-theme')||'dark';
+  document.querySelectorAll('#theme-toggle button').forEach(b=>b.classList.toggle('active',b.dataset.themeVal===current));
+  document.getElementById('theme-toggle').addEventListener('click',e=>{
+    const btn=e.target.closest('button[data-theme-val]');if(!btn)return;
+    const next=btn.dataset.themeVal;
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('vis-theme',next);}catch(_){}
+    document.querySelectorAll('#theme-toggle button').forEach(b=>b.classList.toggle('active',b.dataset.themeVal===next));
+  });
+})();
+
+// SCROLL-REVEAL LAYERS (motion-style fade-up on intersect)
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in-view'); revealObserver.unobserve(e.target); }});
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.layer, .orch-box').forEach(el => revealObserver.observe(el));
+
 // TOOLTIP
 const tip = document.getElementById('tooltip');
 document.querySelectorAll('[data-tip]').forEach(el => {

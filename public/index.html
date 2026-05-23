@@ -4,24 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIS — Venue Intelligence System</title>
+<script>
+// Apply theme + stadium before paint to avoid flash
+(function(){try{const t=localStorage.getItem('vis-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+(function(){try{const s=localStorage.getItem('vis-stadium')||'narendra-modi';document.documentElement.setAttribute('data-stadium',s);}catch(e){}})();
+</script>
 <style>
 :root{
   --bg:#060c18;--bg2:#0d1526;--bg3:#111e35;
   --border:rgba(255,255,255,.07);
   --blue:#00aaff;--teal:#00dca0;--purple:#a855f7;
-  --orange:#ff9500;--red:#ff4444;--green:#22c55e;
+  --orange:#ff9500;--red:#ff4444;--green:#22c55e;--yellow:#fbbf24;
   --text:#e2eaf5;--muted:#6b8aad;
+  --nav-bg:rgba(6,12,24,.9);
+  --card-shadow:0 8px 24px -10px rgba(0,0,0,.5);
+  --hero-glow1:rgba(0,170,255,.08);
+  --hero-glow2:rgba(168,85,247,.07);
+}
+:root[data-theme="light"]{
+  --bg:#f5f7fb;--bg2:#ffffff;--bg3:#eef2f8;
+  --border:rgba(15,23,42,.10);
+  --blue:#0284c7;--teal:#0891b2;--purple:#7c3aed;
+  --orange:#ea580c;--red:#dc2626;--green:#16a34a;--yellow:#d97706;
+  --text:#0f172a;--muted:#64748b;
+  --nav-bg:rgba(255,255,255,.85);
+  --card-shadow:0 8px 28px -14px rgba(15,23,42,.18);
+  --hero-glow1:rgba(2,132,199,.10);
+  --hero-glow2:rgba(124,58,237,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;transition:background .3s,color .3s}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(6,12,24,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;transition:background .3s,border-color .3s}
 .nav-logo{font-size:1.1rem;font-weight:700;background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-links{display:flex;gap:28px;list-style:none}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .2s}
-.nav-links a:hover{color:#fff}
+.nav-links a:hover{color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:14px}
 .nav-btn{background:linear-gradient(135deg,var(--blue),var(--purple));border:none;color:#fff;padding:8px 20px;border-radius:20px;font-size:.82rem;cursor:pointer;font-weight:600}
+.stadium-picker-wrap{position:relative}
+.stadium-picker{appearance:none;-webkit-appearance:none;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:.78rem;font-weight:600;padding:6px 28px 6px 12px;border-radius:18px;cursor:pointer;transition:all .25s;max-width:240px;text-overflow:ellipsis}
+.stadium-picker:hover{border-color:rgba(0,170,255,.4)}
+.stadium-picker:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,170,255,.15)}
+.stadium-picker-wrap::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.7rem;pointer-events:none}
+.stadium-picker option{background:var(--bg2);color:var(--text)}
+.theme-toggle{display:inline-flex;align-items:center;gap:0;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px;transition:background .3s,border-color .3s}
+.theme-toggle button{background:transparent;border:0;cursor:pointer;color:var(--muted);font-size:.78rem;padding:4px 10px;border-radius:16px;display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-weight:600;transition:all .25s}
+.theme-toggle button.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 2px 8px -2px rgba(0,170,255,.4)}
+.theme-toggle button:not(.active):hover{color:var(--text)}
 
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 20px 60px;position:relative;overflow:hidden}
 .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,170,255,.08),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(168,85,247,.07),transparent)}
@@ -79,18 +110,23 @@ section{padding:80px 40px;max-width:1300px;margin:0 auto}
 .crowd-mode-badge.rule{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
 .crowd-mode-badge.agent{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
 .crowd-decisions{flex:1;overflow-y:auto;padding:10px}
-.crowd-decision{padding:10px 12px;border-radius:8px;margin-bottom:8px;border-left:3px solid;animation:slideIn .3s ease;background:var(--bg2)}
+.crowd-decision{padding:10px 12px;border-radius:8px;margin-bottom:8px;border-left:3px solid;animation:decSlideIn .45s cubic-bezier(.2,.8,.2,1);background:var(--bg2);position:relative;overflow:hidden;transition:transform .2s,background .2s}
+.crowd-decision::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transform:translateX(-100%);animation:decShimmer 1.2s ease-out}
+.crowd-decision:hover{transform:translateX(2px);background:var(--bg3)}
 .crowd-decision.rule{border-color:var(--green)}
 .crowd-decision.agent{border-color:var(--purple)}
 .crowd-decision.emergency{border-color:var(--red)}
 .crowd-decision.vision{border-color:var(--teal)}
-@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@keyframes decSlideIn{0%{opacity:0;transform:translateY(-6px) scale(.985)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes decShimmer{to{transform:translateX(100%)}}
 .dec-header{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.dec-badge{font-size:.58rem;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.dec-badge{font-size:.58rem;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;position:relative}
 .dec-badge.rule{background:rgba(34,197,94,.15);color:var(--green)}
 .dec-badge.agent{background:rgba(168,85,247,.15);color:var(--purple)}
 .dec-badge.emergency{background:rgba(255,68,68,.15);color:var(--red)}
 .dec-badge.vision{background:rgba(0,220,160,.15);color:var(--teal)}
+.dec-badge.agent::before,.dec-badge.vision::before,.dec-badge.emergency::before{content:'';position:absolute;left:-1px;top:50%;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translate(-100%,-50%);box-shadow:0 0 6px currentColor;animation:badgePulse 1.4s ease-in-out infinite}
+@keyframes badgePulse{0%,100%{opacity:.4;transform:translate(-100%,-50%) scale(.85)}50%{opacity:1;transform:translate(-100%,-50%) scale(1.2)}}
 .dec-time{font-size:.6rem;color:var(--muted);margin-left:auto}
 .dec-text{font-size:.75rem;color:var(--text);line-height:1.5}
 .dec-zone{font-size:.65rem;color:var(--muted);margin-top:3px}
@@ -99,12 +135,62 @@ section{padding:80px 40px;max-width:1300px;margin:0 auto}
 .cs-val{font-size:1.1rem;font-weight:800}
 .cs-lbl{font-size:.6rem;color:var(--muted);letter-spacing:.5px}
 
-/* KPI strip */
+/* Architecture pipeline cards */
+.arch-pipe-card{border:1px solid;border-radius:12px;padding:18px;text-align:center;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s}
+.arch-pipe-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px -16px rgba(0,170,255,.35);border-color:rgba(0,170,255,.35)}
+
+/* KPI strip — animated cards */
 .dash-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:24px}
-.kpi{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
-.kpi .v{font-size:1.6rem;font-weight:800;margin-bottom:4px}
+.kpi{position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s;cursor:default}
+.kpi::before{content:'';position:absolute;inset:-1px;border-radius:12px;padding:1px;background:conic-gradient(from var(--ang,0deg),transparent 0deg,transparent 240deg,rgba(0,170,255,.55) 290deg,rgba(168,85,247,.55) 340deg,transparent 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .35s;pointer-events:none;animation:kpi-spin 8s linear infinite}
+.kpi:hover{transform:translateY(-3px);border-color:rgba(0,170,255,.25);box-shadow:0 12px 28px -10px rgba(0,170,255,.25),0 0 0 1px rgba(0,170,255,.08)}
+.kpi:hover::before{opacity:1}
+.kpi.flash{animation:kpi-flash .6s ease}
+@keyframes kpi-flash{0%{background:var(--bg3)}40%{background:rgba(0,170,255,.10)}100%{background:var(--bg3)}}
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes kpi-spin{to{--ang:360deg}}
+.kpi .v{font-size:1.6rem;font-weight:800;margin-bottom:4px;font-variant-numeric:tabular-nums;letter-spacing:-.5px;transition:color .25s,text-shadow .25s}
+.kpi:hover .v{text-shadow:0 0 18px currentColor}
 .kpi .l{font-size:.63rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .live-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:.72rem;padding:5px 12px;border-radius:20px;letter-spacing:1px}
+/* Surge Prediction */
+.surge-strip{background:linear-gradient(135deg,rgba(124,77,255,.08),rgba(0,229,255,.04));border:1px solid rgba(124,77,255,.25);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.ss-header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.ss-tag{font-size:.72rem;font-weight:700;color:var(--purple);letter-spacing:1.5px}
+.ss-sub{font-size:.7rem;color:var(--muted)}
+.ss-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ss-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+.ss-eta{font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums;min-width:56px;text-align:center}
+.ss-eta.warn{color:var(--orange)}.ss-eta.crit{color:var(--red)}.ss-eta.ok{color:var(--green)}
+.ss-body{flex:1;font-size:.75rem;line-height:1.35}
+.ss-zone{font-weight:600;color:var(--text)}
+.ss-meta{color:var(--muted);font-size:.68rem}
+
+/* Multi-Agent Negotiation */
+.negotiation-stage{margin-top:32px;background:var(--bg);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.neg-topic{padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600;color:var(--text)}
+.neg-topic .neg-label{color:var(--purple);letter-spacing:1px;font-size:.7rem;margin-right:10px}
+.neg-agents{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.neg-agent{background:var(--bg);padding:16px;display:flex;flex-direction:column;gap:8px;position:relative;transition:background .3s,box-shadow .3s}
+.neg-agent.active{background:var(--bg2);box-shadow:inset 3px 0 0 var(--purple)}
+.neg-agent.changed{animation:negChange .9s ease}
+@keyframes negChange{0%{background:rgba(168,85,247,.15)}100%{background:var(--bg)}}
+.neg-agent .na-stance{animation:none}
+.neg-agent.changed .na-stance{animation:stanceFlip .5s cubic-bezier(.3,1.4,.5,1)}
+@keyframes stanceFlip{0%{transform:scale(.6) rotate(-8deg);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1) rotate(0)}}
+.na-h{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700}
+.na-icon{font-size:1rem}
+.na-stance{display:inline-block;padding:3px 10px;border-radius:6px;font-size:.7rem;font-weight:800;letter-spacing:1px;width:fit-content}
+.neg-agent.safety .na-stance{background:rgba(255,68,68,.15);color:var(--red)}
+.neg-agent.operations .na-stance{background:rgba(255,149,0,.15);color:var(--orange)}
+.neg-agent.experience .na-stance{background:rgba(0,229,255,.15);color:var(--teal)}
+.na-arg{font-size:.75rem;color:var(--muted);line-height:1.5}
+.neg-resolution{padding:16px 20px;background:linear-gradient(135deg,rgba(124,77,255,.1),rgba(0,229,255,.05));border-top:1px solid var(--border)}
+.nr-h{font-size:.72rem;font-weight:800;letter-spacing:1px;color:var(--purple);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.nr-decision{font-size:.88rem;color:var(--text);font-weight:500;line-height:1.5}
+.nr-meta{margin-top:8px;font-size:.68rem;color:var(--muted)}
+@media(max-width:780px){.neg-agents{grid-template-columns:1fr}}
+
 .scenario-picker{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:3px 3px 3px 10px}
 .scenario-picker .sc-label{font-size:.68rem;color:var(--muted);letter-spacing:1px;margin-right:6px;font-weight:600}
 .scenario-picker button{background:transparent;border:0;color:var(--muted);font-size:.72rem;font-weight:600;letter-spacing:.5px;padding:5px 10px;border-radius:5px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
@@ -142,6 +228,14 @@ section{padding:80px 40px;max-width:1300px;margin:0 auto}
 .msg.user{background:linear-gradient(135deg,rgba(0,170,255,.2),rgba(168,85,247,.15));border:1px solid rgba(0,170,255,.2);align-self:flex-end;border-bottom-right-radius:3px}
 .msg.ai{background:var(--bg2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px}
 .msg .sender{font-size:.65rem;color:var(--muted);margin-bottom:4px;font-weight:600}
+.msg.ai{max-width:88%}
+.msg.ai .chat-body{font-size:.83rem;line-height:1.6}
+.msg.ai .chat-body strong{color:var(--text)}
+.msg.ai .chat-body em{color:var(--muted);font-style:normal;background:rgba(0,170,255,.08);padding:1px 6px;border-radius:4px;font-size:.78rem}
+.route-map{display:block;width:100%;max-width:280px;height:auto;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin:10px 0 4px;padding:6px}
+.msg.ai .chat-body .typing{display:inline-block;min-width:6px;border-right:2px solid var(--blue);animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{border-color:transparent}}
+.msg.ai .chat-body .dots{color:var(--muted)}
 .chat-input-row{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--border);background:var(--bg2)}
 .chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.85rem;outline:none;transition:border-color .2s}
 .chat-input:focus{border-color:rgba(0,170,255,.4)}
@@ -203,7 +297,16 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
     <li><a href="#agents">AI Agents</a></li>
     <li><a href="#chat-demo">Chat Demo</a></li>
   </ul>
-  <button class="nav-btn" onclick="window.open('architecture.html','_blank')">View Architecture</button>
+  <div class="nav-right">
+    <div class="stadium-picker-wrap" title="Switch venue">
+      <select id="stadium-picker" class="stadium-picker" aria-label="Select stadium"></select>
+    </div>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+      <button data-theme-val="dark" class="active" title="Dark theme">🌙 Dark</button>
+      <button data-theme-val="light" title="Light theme">☀️ Light</button>
+    </div>
+    <button class="nav-btn" onclick="window.open('architecture.html','_blank')">View Architecture</button>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -212,7 +315,7 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
   <div style="position:relative;z-index:1">
     <div class="hero-badge"><span class="pulse"></span>LIVE SYSTEM · REAL-TIME AI</div>
     <h1>The Future of<br><span>Venue Intelligence</span></h1>
-    <p>An AI-powered multi-agent ecosystem that transforms how 72,000+ fans experience large-scale sporting events — from crowd safety to personalised assistance.</p>
+    <p>An AI-powered multi-agent ecosystem that transforms how <span data-cap-display data-cap-format="round-k">72,000</span>+ fans experience large-scale sporting events — from crowd safety to personalised assistance.</p>
     <div class="hero-btns">
       <button class="btn-primary" onclick="document.getElementById('stadium-view').scrollIntoView({behavior:'smooth'})">🏟️ See Live Stadium</button>
       <button class="btn-secondary" onclick="document.getElementById('chat-demo').scrollIntoView({behavior:'smooth'})">💬 Try Attendee Chat</button>
@@ -229,14 +332,14 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
 <!-- PROBLEM -->
 <section id="problem">
   <div class="section-tag">The Challenge</div>
-  <div class="section-title">What breaks at 72,000 people</div>
+  <div class="section-title">What breaks at <span data-cap-display data-cap-format="round-k">72,000</span> people</div>
   <p class="section-sub">Every large event faces the same systemic failures — and they all compound each other at scale.</p>
   <div class="problems">
     <div class="problem-card"><div class="problem-icon">🚶‍♂️</div><h3>Crowd Bottlenecks</h3><p>Entry gates and concourses become dangerously congested with no real-time intelligence to redistribute flow.</p></div>
     <div class="problem-card"><div class="problem-icon">⏳</div><h3>Long Wait Times</h3><p>Concession queues of 15–25 minutes with no dynamic staffing response or attendee guidance to alternatives.</p></div>
     <div class="problem-card"><div class="problem-icon">📻</div><h3>Siloed Staff Comms</h3><p>Security, medics, ushers, and logistics operate on separate channels with no unified coordination layer.</p></div>
     <div class="problem-card"><div class="problem-icon">🚨</div><h3>Slow Emergency Response</h3><p>Medical incidents and safety threats take minutes to escalate — time that costs lives in critical situations.</p></div>
-    <div class="problem-card"><div class="problem-icon">🗺️</div><h3>No Personal Guidance</h3><p>Attendees navigate 72,000-person venues alone — no smart assistant for seat finding, food orders, or accessibility.</p></div>
+    <div class="problem-card"><div class="problem-icon">🗺️</div><h3>No Personal Guidance</h3><p>Attendees navigate <span data-cap-display data-cap-format="round-k">72,000</span>-person venues alone — no smart assistant for seat finding, food orders, or accessibility.</p></div>
     <div class="problem-card"><div class="problem-icon">🚗</div><h3>Post-Game Chaos</h3><p>Exit surges overwhelm parking lots and transport with no predictive management or dynamic routing.</p></div>
   </div>
 </section>
@@ -266,6 +369,13 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
 
     <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
       <div>
+        <div class="surge-strip">
+          <div class="ss-header">
+            <span class="ss-tag">🔮 SURGE PREDICTION — NEXT 5 MIN</span>
+            <span class="ss-sub">Forecast confidence: <span id="ss-conf">87%</span> · Model: gemini-2.5-pro</span>
+          </div>
+          <div class="ss-items" id="surge-items"></div>
+        </div>
         <div class="zones-grid" id="zones-grid"></div>
         <div class="dash-kpis" style="margin-top:20px">
           <div class="kpi"><div class="v" id="kpi-att" style="color:var(--blue)">72,441</div><div class="l">Attendees</div></div>
@@ -295,77 +405,142 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
   </div>
 </div>
 
+<!-- MULTI-AGENT NEGOTIATION -->
+<section id="negotiation">
+  <div class="section-tag">Agentic Reasoning</div>
+  <div class="section-title">Multi-Agent Negotiation</div>
+  <p class="section-sub">When agents disagree, the Master Orchestrator weighs trade-offs and decides. Live debate stream — updates every 8 seconds.</p>
+
+  <div class="negotiation-stage">
+    <div class="neg-topic"><span class="neg-label">DEBATE</span><span id="neg-topic">Should Gate 2 be closed during the goal-rush surge?</span></div>
+    <div class="neg-agents">
+      <div class="neg-agent safety">
+        <div class="na-h"><span class="na-icon">🛡️</span>SafetyAgent</div>
+        <div class="na-stance" id="neg-safety-stance">CLOSE</div>
+        <div class="na-arg" id="neg-safety">Crowd density at Gate 2 is 94%. Closure prevents crush risk.</div>
+      </div>
+      <div class="neg-agent operations">
+        <div class="na-h"><span class="na-icon">⚙️</span>OperationsAgent</div>
+        <div class="na-stance" id="neg-operations-stance">REDEPLOY</div>
+        <div class="na-arg" id="neg-operations">Staff at Gate 2 have worked 7h — rotate 4 ushers in, current team to break room.</div>
+      </div>
+      <div class="neg-agent experience">
+        <div class="na-h"><span class="na-icon">⭐</span>ExperienceAgent</div>
+        <div class="na-stance" id="neg-exp-stance">PARTIAL</div>
+        <div class="na-arg" id="neg-exp">One-way flow through Gate 2 — 60% throughput, preserves satisfaction.</div>
+      </div>
+    </div>
+    <div class="neg-resolution">
+      <div class="nr-h"><span>🧠</span>MASTER ORCHESTRATOR — RESOLUTION</div>
+      <div class="nr-decision" id="neg-decision">Adopt ExperienceAgent's one-way flow. SafetyAgent veto held in reserve if density exceeds 96%.</div>
+      <div class="nr-meta"><span id="neg-time">11:23:45</span> · Weights — Safety 0.5, Experience 0.3, Operations 0.2</div>
+    </div>
+  </div>
+</section>
+
 <!-- ARCHITECTURE SECTION -->
 <section id="architecture">
   <div class="section-tag">System Design</div>
   <div class="section-title">How the system is built</div>
-  <p class="section-sub">6 layers from physical sensors to real-world action. The rule engine handles 80% instantly — AI agents handle the 20% rules can't.</p>
+  <p class="section-sub">7 layers from physical sensors to real-world action. Rules handle 80% instantly — a hierarchical agent ecosystem (Predictive → Specialist → Orchestrator) handles the rest.</p>
 
   <div style="margin-top:40px;display:flex;flex-direction:column;gap:0">
 
-    <!-- Pipeline visual -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px">
-      <div style="background:rgba(0,60,100,.2);border:1px solid rgba(0,170,255,.2);border-radius:12px;padding:18px;text-align:center">
+    <!-- Pipeline visual — 7 layers -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:28px">
+      <div class="arch-pipe-card" style="background:rgba(0,60,100,.2);border-color:rgba(0,170,255,.2)">
         <div style="font-size:1.6rem;margin-bottom:8px">📡</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Physical Layer</div>
         <div style="font-size:.68rem;color:var(--muted)">284 IoT sensors · 96 CCTV cameras · MQTT + RTSP</div>
       </div>
-      <div style="background:rgba(0,80,60,.2);border:1px solid rgba(0,220,160,.2);border-radius:12px;padding:18px;text-align:center">
+      <div class="arch-pipe-card" style="background:rgba(0,80,60,.2);border-color:rgba(0,220,160,.2)">
         <div style="font-size:1.6rem;margin-bottom:8px">⚙️</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Ingestion Pipeline</div>
         <div style="font-size:.68rem;color:var(--muted)">Normalize · Threshold gate · Enrich · Publish</div>
         <div style="font-size:.6rem;font-family:monospace;color:var(--teal);margin-top:4px">core/ingestion.py</div>
       </div>
-      <div style="background:rgba(80,0,120,.2);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:18px;text-align:center">
+      <div class="arch-pipe-card" style="background:rgba(80,0,120,.2);border-color:rgba(168,85,247,.2)">
         <div style="font-size:1.6rem;margin-bottom:8px">⚡</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Core Infrastructure</div>
         <div style="font-size:.68rem;color:var(--muted)">Event bus · State store · Gemini client + cache</div>
         <div style="font-size:.6rem;font-family:monospace;color:var(--purple);margin-top:4px">core/event_bus.py · state_store.py</div>
       </div>
-      <div style="background:rgba(20,40,20,.3);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:18px;text-align:center;position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;left:0;right:50%;bottom:0;background:rgba(34,197,94,.04);border-right:1px dashed rgba(255,255,255,.08)"></div>
+      <div class="arch-pipe-card" style="background:rgba(120,80,0,.18);border-color:rgba(251,191,36,.25)">
+        <div style="font-size:1.6rem;margin-bottom:8px">🔮</div>
+        <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Predictive Layer</div>
+        <div style="font-size:.68rem;color:var(--muted)">Surge Forecast · 5-min ETA · Confidence model</div>
+        <div style="font-size:.6rem;font-family:monospace;color:var(--yellow);margin-top:4px">gemini-2.5-pro</div>
+      </div>
+      <div class="arch-pipe-card" style="background:rgba(20,40,20,.3);border-color:rgba(255,255,255,.12);position:relative;overflow:hidden">
         <div style="font-size:1.6rem;margin-bottom:8px">🎯</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Decision Layer</div>
-        <div style="display:flex;gap:6px;justify-content:center;margin-top:6px">
-          <span style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:.62rem;padding:2px 8px;border-radius:4px">80% Rules</span>
-          <span style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);color:var(--purple);font-size:.62rem;padding:2px 8px;border-radius:4px">20% AI</span>
+        <div style="display:flex;gap:5px;justify-content:center;margin-top:6px;flex-wrap:wrap">
+          <span style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:.58rem;padding:2px 7px;border-radius:4px">80% Rules</span>
+          <span style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);color:var(--purple);font-size:.58rem;padding:2px 7px;border-radius:4px">15% Agents</span>
+          <span style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:var(--yellow);font-size:.58rem;padding:2px 7px;border-radius:4px">5% Orch</span>
         </div>
       </div>
-      <div style="background:rgba(0,60,80,.2);border:1px solid rgba(0,170,255,.2);border-radius:12px;padding:18px;text-align:center">
+      <div class="arch-pipe-card" style="background:rgba(0,60,80,.2);border-color:rgba(0,170,255,.2)">
         <div style="font-size:1.6rem;margin-bottom:8px">🚀</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">API Layer</div>
         <div style="font-size:.68rem;color:var(--muted)">FastAPI · WebSocket · REST endpoints</div>
         <div style="font-size:.6rem;font-family:monospace;color:var(--blue);margin-top:4px">api/main.py · routes/</div>
       </div>
-      <div style="background:rgba(0,80,40,.2);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:18px;text-align:center">
+      <div class="arch-pipe-card" style="background:rgba(0,80,40,.2);border-color:rgba(34,197,94,.2)">
         <div style="font-size:1.6rem;margin-bottom:8px">📤</div>
         <div style="font-size:.8rem;font-weight:700;margin-bottom:4px">Real-World Outputs</div>
         <div style="font-size:.68rem;color:var(--muted)">PA · Signage · Mobile · Emergency Services</div>
       </div>
     </div>
 
-    <!-- Decision split highlight -->
+    <!-- 3-Tier Decision System -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px">
-      <div style="text-align:center;font-size:.72rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:20px">Decision Layer — How events get routed</div>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center">
-        <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:18px">
-          <div style="color:var(--green);font-size:.72rem;font-weight:700;letter-spacing:1px;margin-bottom:10px">⚙️ RULE ENGINE — 80%</div>
-          <div style="font-size:.7rem;font-family:monospace;color:var(--muted)">rules/engine.py</div>
-          <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">👥 Crowd routing — redirect when density &gt;70%</div>
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">⏱️ Queue alerts — dispatch staff when queue &gt;8</div>
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">🅿️ Parking overflow — open Lot D at 90%</div>
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">👮 Staff dispatch — rebalance zones by load</div>
+      <div style="text-align:center;font-size:.72rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">3-Tier Decision System</div>
+      <div style="text-align:center;font-size:.78rem;color:var(--text);margin-bottom:22px">From instant rules to hierarchical agent negotiation</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <!-- TIER 1 -->
+        <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:18px;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <span style="color:var(--green);font-size:.7rem;font-weight:800;letter-spacing:1.5px">TIER 1 · RULE ENGINE</span>
+            <span style="color:var(--green);font-size:1.4rem;font-weight:800">80%</span>
+          </div>
+          <div style="font-size:.7rem;font-family:monospace;color:var(--muted);margin-bottom:10px">rules/engine.py</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px;line-height:1.5">Instant, deterministic. Zero API cost. Handles the majority of routine venue events.</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">👥 Crowd routing — redirect when density &gt;70%</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">⏱️ Queue alerts — dispatch staff when queue &gt;8</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--green)">🅿️ Parking overflow — Lot D at 90%</div>
           </div>
         </div>
-        <div style="text-align:center;color:var(--muted);font-size:1.2rem">⟶</div>
-        <div style="background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:18px">
-          <div style="color:var(--purple);font-size:.72rem;font-weight:700;letter-spacing:1px;margin-bottom:10px">🤖 AI AGENTS — 20%</div>
-          <div style="font-size:.7rem;font-family:monospace;color:var(--muted)">agents/</div>
-          <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--purple)">💬 Natural language fan queries — Attendee Agent</div>
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--red)">🚨 Novel emergencies — Emergency Agent (Opus 4.7)</div>
-            <div style="font-size:.75rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--teal)">👁️ Camera anomalies — Vision Agent (anomaly &gt;0.7)</div>
+
+        <!-- TIER 2 -->
+        <div style="background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:18px;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <span style="color:var(--purple);font-size:.7rem;font-weight:800;letter-spacing:1.5px">TIER 2 · SPECIALIST AGENTS</span>
+            <span style="color:var(--purple);font-size:1.4rem;font-weight:800">15%</span>
+          </div>
+          <div style="font-size:.7rem;font-family:monospace;color:var(--muted);margin-bottom:10px">agents/</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px;line-height:1.5">Domain-expert Gemini agents. Tool use, streaming. Each owns its event-type subscription.</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--blue)">💬 Attendee — natural-language fan chat</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--red)">🚨 Emergency — gemini-3.1-pro · novel incidents</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--teal)">👁️ Vision — anomaly &gt;0.7 frame analysis</div>
+          </div>
+        </div>
+
+        <!-- TIER 3 -->
+        <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:18px;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <span style="color:var(--yellow);font-size:.7rem;font-weight:800;letter-spacing:1.5px">TIER 3 · MASTER ORCHESTRATOR</span>
+            <span style="color:var(--yellow);font-size:1.4rem;font-weight:800">5%</span>
+          </div>
+          <div style="font-size:.7rem;font-family:monospace;color:var(--muted);margin-bottom:10px">orchestrator · gemini-3-pro</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px;line-height:1.5">Fires when specialist agents disagree. Weighs trade-offs, publishes binding resolution.</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--red)">🛡️ Safety — veto on density &gt;96%</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--orange)">⚙️ Operations — staff workload + rotation limits</div>
+            <div style="font-size:.72rem;color:var(--text);padding:5px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid var(--teal)">⭐ Experience — attendee-centric trade-offs</div>
           </div>
         </div>
       </div>
@@ -383,18 +558,39 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
 <!-- AI AGENTS -->
 <section id="agents">
   <div class="section-tag">Powered by Gemini</div>
-  <div class="section-title">The 3 AI Agents</div>
-  <p class="section-sub">Only the decisions that genuinely require AI reasoning. Everything else is fast, rule-based code that runs instantly at zero API cost.</p>
+  <div class="section-title">The AI Agent Ecosystem</div>
+  <p class="section-sub">7 agents working in a 3-tier hierarchy: a Predictive forecaster, 3 Specialist agents on the operational frontline, and 3 Trade-off agents whose disagreements are resolved by the Master Orchestrator.</p>
+
+  <!-- Ecosystem subhead: PREDICTIVE -->
+  <div style="margin-top:32px;margin-bottom:10px;font-size:.7rem;font-weight:700;color:var(--yellow);letter-spacing:2px">🔮 PREDICTIVE TIER</div>
+  <div class="agents-grid" style="grid-template-columns:1fr">
+    <div class="agent-card" style="border-color:rgba(251,191,36,.25)">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:rgba(251,191,36,.15);color:var(--yellow)">🔮</div>
+        <div>
+          <div class="agent-name">Surge Prediction Agent</div>
+          <div class="agent-model">gemini-2.5-pro · 5-min horizon · Confidence-rated</div>
+        </div>
+      </div>
+      <p class="agent-desc">Projects zone density 5 minutes into the future from current state plus scenario trajectory. Surfaces ETAs ("Gate North will hit 85% in 3:20") so staff can pre-position before the surge actually lands.</p>
+      <div class="agent-tools">
+        <span class="tool-tag">project_density</span><span class="tool-tag">eta_to_threshold</span><span class="tool-tag">confidence_score</span><span class="tool-tag">recommend_preempt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ecosystem subhead: SPECIALISTS -->
+  <div style="margin-top:28px;margin-bottom:10px;font-size:.7rem;font-weight:700;color:var(--purple);letter-spacing:2px">🤖 SPECIALIST TIER — Operational frontline</div>
   <div class="agents-grid">
     <div class="agent-card blue">
       <div class="agent-header">
         <div class="agent-icon blue">💬</div>
         <div>
           <div class="agent-name">Attendee Experience Agent</div>
-          <div class="agent-model">gemini-2.5-flash · Streaming</div>
+          <div class="agent-model">gemini-3.1-flash-lite · Streaming · WebSocket</div>
         </div>
       </div>
-      <p class="agent-desc">Handles every fan's personal query in natural language — seat finding, accessible routes, food ordering, lost & found. Streams responses in real time to the mobile app via WebSocket.</p>
+      <p class="agent-desc">Handles every fan's personal query in natural language — seat finding, accessible routes, food ordering, lost & found. Streams responses in real time to the mobile app.</p>
       <div class="agent-tools">
         <span class="tool-tag">lookup_seat</span><span class="tool-tag">get_queue_wait</span><span class="tool-tag">find_nearest_amenity</span><span class="tool-tag">place_food_order</span><span class="tool-tag">request_accessibility_help</span>
       </div>
@@ -404,10 +600,10 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
         <div class="agent-icon purple">🚨</div>
         <div>
           <div class="agent-name">Emergency Response Agent</div>
-          <div class="agent-model">gemini-2.5-pro · Adaptive Thinking</div>
+          <div class="agent-model">gemini-3.1-pro · Adaptive thinking · 2048 tokens</div>
         </div>
       </div>
-      <p class="agent-desc">Safety-critical reasoning for medical incidents, security threats, fires, and evacuations. Uses Opus 4.7 because every emergency is unique — no rule covers every combination of simultaneous incidents.</p>
+      <p class="agent-desc">Safety-critical reasoning for medical incidents, security threats, fires, and evacuations. Uses gemini-3.1-pro because every emergency is a novel combination no ruleset can cover.</p>
       <div class="agent-tools">
         <span class="tool-tag">get_venue_state</span><span class="tool-tag">get_evacuation_routes</span><span class="tool-tag">activate_pa_announcement</span><span class="tool-tag">contact_emergency_services</span><span class="tool-tag">trigger_zone_evacuation</span><span class="tool-tag">dispatch_medical_team</span>
       </div>
@@ -417,12 +613,69 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
         <div class="agent-icon teal">👁️</div>
         <div>
           <div class="agent-name">Vision Anomaly Agent</div>
-          <div class="agent-model">gemini-2.5-flash · Vision</div>
+          <div class="agent-model">gemini-3.1-pro · Vision · anomaly &gt; 0.7</div>
         </div>
       </div>
-      <p class="agent-desc">Interprets flagged camera frames using Gemini Vision. YOLOv8 runs free on all 96 cameras every 5 seconds. When anomaly_score exceeds 0.7, Gemini Vision determines exactly what's happening.</p>
+      <p class="agent-desc">Interprets flagged camera frames using Gemini Vision. YOLOv8 runs free on all 96 cameras every 5s. When anomaly_score exceeds 0.7, Gemini Vision determines exactly what's happening.</p>
       <div class="agent-tools">
         <span class="tool-tag">analyse_frame</span><span class="tool-tag">assess_safety_risk</span><span class="tool-tag">recommend_action</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ecosystem subhead: TRADE-OFF + ORCHESTRATOR -->
+  <div style="margin-top:28px;margin-bottom:10px;font-size:.7rem;font-weight:700;color:var(--text);letter-spacing:2px">⚖️ TRADE-OFF TIER + 👑 MASTER ORCHESTRATOR — Conflict resolution</div>
+  <div class="agents-grid">
+    <div class="agent-card" style="border-color:rgba(255,68,68,.25)">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:rgba(255,68,68,.15);color:var(--red)">🛡️</div>
+        <div>
+          <div class="agent-name">Safety Agent</div>
+          <div class="agent-model">gemini-3-pro · Veto authority · weight 0.50</div>
+        </div>
+      </div>
+      <p class="agent-desc">Owns crush-risk thresholds. Can veto any specialist decision when crowd density passes 96% or when crowd-flow vectors enter a danger envelope.</p>
+      <div class="agent-tools">
+        <span class="tool-tag">crush_risk_score</span><span class="tool-tag">veto_decision</span><span class="tool-tag">override_routing</span>
+      </div>
+    </div>
+    <div class="agent-card" style="border-color:rgba(255,149,0,.25)">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:rgba(255,149,0,.15);color:var(--orange)">⚙️</div>
+        <div>
+          <div class="agent-name">Operations Agent</div>
+          <div class="agent-model">gemini-3.5-flash · weight 0.20</div>
+        </div>
+      </div>
+      <p class="agent-desc">Argues for staff workload limits, shift rotation, and operational sustainability. Prevents over-deployment of security or medics already on long shifts — ensures the human side of the venue stays sharp.</p>
+      <div class="agent-tools">
+        <span class="tool-tag">staff_fatigue_score</span><span class="tool-tag">shift_rotation_check</span><span class="tool-tag">deployment_sustainability</span>
+      </div>
+    </div>
+    <div class="agent-card teal" style="border-color:rgba(0,229,255,.25)">
+      <div class="agent-header">
+        <div class="agent-icon teal">⭐</div>
+        <div>
+          <div class="agent-name">Experience Agent</div>
+          <div class="agent-model">gemini-3.5-flash · weight 0.30</div>
+        </div>
+      </div>
+      <p class="agent-desc">Represents the attendee point-of-view in trade-offs. Proposes "partial" or compromise options (one-way flow, staggered release) that preserve perceived service quality.</p>
+      <div class="agent-tools">
+        <span class="tool-tag">attendee_sentiment</span><span class="tool-tag">propose_compromise</span><span class="tool-tag">satisfaction_delta</span>
+      </div>
+    </div>
+    <div class="agent-card" style="grid-column:1/-1;border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(0,170,255,.04))">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff">👑</div>
+        <div>
+          <div class="agent-name">Master Orchestrator</div>
+          <div class="agent-model">gemini-3-pro · Hierarchical · Conflict resolver</div>
+        </div>
+      </div>
+      <p class="agent-desc">The top of the agent hierarchy. Fires only when specialist agents disagree on a decision. Weighs all stances (Safety 0.50, Experience 0.30, Operations 0.20) and publishes the binding resolution to the venue's action layer. Live demo of its reasoning is in the Multi-Agent Negotiation section above.</p>
+      <div class="agent-tools">
+        <span class="tool-tag">collect_stances</span><span class="tool-tag">weighted_resolve</span><span class="tool-tag">publish_resolution</span><span class="tool-tag">audit_trail</span>
       </div>
     </div>
   </div>
@@ -450,7 +703,7 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
         <div class="chat-box">
           <div class="chat-topbar">
             <div class="chat-avatar">🤖</div>
-            <div><div style="font-size:.85rem;font-weight:600">VIS Assistant</div><div class="chat-online">● Online · gemini-2.5-flash</div></div>
+            <div><div style="font-size:.85rem;font-weight:600">VIS Assistant</div><div class="chat-online">● Online · gemini-3.1-flash-lite</div></div>
           </div>
           <div class="chat-msgs" id="chat-msgs">
             <div class="msg ai">
@@ -623,19 +876,77 @@ document.getElementById('scenario-picker').addEventListener('click',e=>{
 // We rotate 4 rule → 1 AI to make the split visible immediately.
 let autoCount=0, aiCount=0, alertCount=0, decisionTick=0;
 
-const RULE_ACTIONS = [
-  (z,p) => ({type:'rule', text:`Redirecting crowd from ${z} (${p}%) → adjacent gate via digital signage`, zone:z}),
-  (z,p) => ({type:'rule', text:`Queue alert: ${z} over threshold (${p}%). Dispatching 2 extra staff members`, zone:z}),
-  (z,p) => ({type:'rule', text:`Opening auxiliary lane at ${z} — occupancy at ${p}%`, zone:z}),
-  (z,p) => ({type:'rule', text:`Parking overflow: routing attendees from ${z} to Lot D`, zone:z}),
-  (z,p) => ({type:'rule', text:`Updated wayfinding signs: redirecting from ${z} to uncrowded alternative`, zone:z}),
-];
-const AI_ACTIONS = [
-  (z,p) => ({type:'agent', text:`EmergencyAgent: Medical alert in ${z}. PA activated, EMS dispatched. Evacuation route pre-staged.`, zone:z}),
-  (z,p) => ({type:'agent', text:`EmergencyAgent: Simultaneous surge in ${z} + Gate South. Novel scenario — non-standard routing applied.`, zone:z}),
-  (z,p) => ({type:'vision', text:`VisionAgent: Camera 3 at ${z} — dense crowd formation detected. Risk score 0.82. Recommend staff deployment.`, zone:z}),
-  (z,p) => ({type:'vision', text:`VisionAgent: Anomaly confirmed at ${z} — crowd compaction exceeds safe density. Alerting operations.`, zone:z}),
-];
+// Decision templates per scenario — Auto = currently active scenario picks the pool.
+const SCENARIO_ACTIONS = {
+  Normal: {
+    rule: [
+      (z,p) => ({type:'rule', text:`Routine flow check at ${z} (${p}%) — within normal bands`, zone:z}),
+      (z,p) => ({type:'rule', text:`Wayfinding refresh: ${z} signage updated to balance load`, zone:z}),
+      (z,p) => ({type:'rule', text:`Concession queue at ${z} normal (${p}%). No staff adjustment needed`, zone:z}),
+      (z,p) => ({type:'rule', text:`HVAC adjusted for ${z} — comfort target maintained`, zone:z}),
+      (z,p) => ({type:'rule', text:`Auto-dispatched 1 cleaning crew to ${z}`, zone:z}),
+    ],
+    ai: [
+      (z,p) => ({type:'agent', text:`ExperienceAgent: 12 wayfinding chats resolved near ${z} in last minute.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} camera sweep clean — anomaly score 0.18.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Crowd posture analysis at ${z} — relaxed flow, no clustering.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Facial-density heatmap stable across ${z} cameras.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Object detection at ${z} — 0 unattended bags flagged.`, zone:z}),
+    ],
+  },
+  Surge: {
+    rule: [
+      (z,p) => ({type:'rule', text:`SURGE: redirecting from ${z} (${p}%) → adjacent gate via signage`, zone:z}),
+      (z,p) => ({type:'rule', text:`Opening auxiliary lane at ${z} — occupancy at ${p}%`, zone:z}),
+      (z,p) => ({type:'rule', text:`Dispatching 4 extra security to ${z} (threshold breach)`, zone:z}),
+      (z,p) => ({type:'rule', text:`One-way flow enforced at ${z} — throughput +35%`, zone:z}),
+      (z,p) => ({type:'rule', text:`Crowd-flow rule: ${z} → throttled at gate, holding pen activated`, zone:z}),
+    ],
+    ai: [
+      (z,p) => ({type:'agent', text:`EmergencyAgent: Simultaneous surge in ${z} + Gate South. Non-standard routing applied.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Dense crowd formation at ${z} — risk score 0.84. Pre-deploy staff.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Compaction velocity rising at ${z} — 1.4 m/s. Escalating to Safety.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Counter-flow detected at ${z} Camera 7 — flagging for usher attention.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} pressure-map crosses 4 ppl/m² — entering yellow zone.`, zone:z}),
+      (z,p) => ({type:'agent', text:`EmergencyAgent: Crush-risk threshold at ${z} (${p}%) — PA cued, ushers repositioned.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Smoke/aerosol detection at ${z} — negative. Continuing surveillance.`, zone:z}),
+    ],
+  },
+  'Queue Peak': {
+    rule: [
+      (z,p) => ({type:'rule', text:`Queue alert: ${z} over threshold (${p}%). +2 staff dispatched`, zone:z}),
+      (z,p) => ({type:'rule', text:`Mobile vendor deployed to ${z} — wait time projected -7 min`, zone:z}),
+      (z,p) => ({type:'rule', text:`Wait-time signage updated: ${z} = ${Math.round(p/5)} min`, zone:z}),
+      (z,p) => ({type:'rule', text:`Pre-order pickup lane opened at ${z}`, zone:z}),
+      (z,p) => ({type:'rule', text:`Auto-rerouting attendees from ${z} to less-busy concession`, zone:z}),
+    ],
+    ai: [
+      (z,p) => ({type:'agent', text:`ExperienceAgent: 38 attendees notified of shorter queue alternative to ${z}.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} queue length detected at 22 — staffing model triggered.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Queue-shape analysis at ${z} — single-file holding, no fan-out.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} POS dwell-time spiking — avg transaction 47s vs 28s baseline.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Detected 3 abandoned-cart events at ${z} — pre-order suggestion pushed.`, zone:z}),
+    ],
+  },
+  'Post-Game': {
+    rule: [
+      (z,p) => ({type:'rule', text:`Post-game egress: opening all lanes at ${z} (${p}%)`, zone:z}),
+      (z,p) => ({type:'rule', text:`Parking overflow: routing from ${z} to Lot D`, zone:z}),
+      (z,p) => ({type:'rule', text:`3 extra shuttle buses dispatched — ${z} pickup`, zone:z}),
+      (z,p) => ({type:'rule', text:`PA section-release: ${z} called to exit (staggered)`, zone:z}),
+      (z,p) => ({type:'rule', text:`Rideshare pickup zone expanded near ${z}`, zone:z}),
+    ],
+    ai: [
+      (z,p) => ({type:'agent', text:`EmergencyAgent: Exit-surge model peaked. Crowd compaction at ${z} controlled.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} exit flow asymmetric — recommend usher repositioning.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Tracking 1,240 attendees egressing ${z} — flow at 4.2 ppl/s.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Vehicle pickup zone at ${z} — 6 idling rideshares, recommend hold.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: ${z} bottleneck cleared — last 30s flow rate normalised.`, zone:z}),
+      (z,p) => ({type:'vision', text:`VisionAgent: Detected fall/slip at ${z} stairwell — EMS auto-flagged.`, zone:z}),
+      (z,p) => ({type:'agent', text:`ExperienceAgent: 218 attendees served wayfinding-to-transit in last 60s.`, zone:z}),
+    ],
+  },
+};
 
 function addCrowdDecision(dec){
   const container=document.getElementById('crowd-decisions');
@@ -667,24 +978,19 @@ function checkAndFireDecisions(){
 
   // Always fire a decision — use highest-density zone if none are critical
   const allZones=Object.entries(zoneDensity).map(([zone,d])=>({zone,pct:Math.round(d*100)}));
-  const pool=critZones.length>0?critZones:allZones.sort((a,b)=>b.pct-a.pct).slice(0,3);
-  const {zone,pct}=pool[Math.floor(Math.random()*pool.length)];
+  const zonePool=critZones.length>0?critZones:allZones.sort((a,b)=>b.pct-a.pct).slice(0,3);
+  const {zone,pct}=zonePool[Math.floor(Math.random()*zonePool.length)];
 
   // Pick action type — deterministic 4:1 rotation (rule:AI) for visible 80/20 split
   decisionTick++;
   const isRule = (decisionTick % 5) !== 0;
+  const actions=SCENARIO_ACTIONS[SCENARIOS[scIdx].name] || SCENARIO_ACTIONS.Normal;
   let dec;
   if(isRule){
-    const template=RULE_ACTIONS[Math.floor(Math.random()*RULE_ACTIONS.length)];
+    const template=actions.rule[Math.floor(Math.random()*actions.rule.length)];
     dec=template(zone.replace(/_/g,' '),pct);
-    // Add routing arrow on stadium
-    const fromIdx=SEC_ZONE.indexOf(zone);
-    if(fromIdx>=0){
-      const toIdx=(fromIdx+3)%12;
-      routingArrows.push({from:fromIdx,to:toIdx,alpha:0.9});
-    }
   } else {
-    const template=AI_ACTIONS[Math.floor(Math.random()*AI_ACTIONS.length)];
+    const template=actions.ai[Math.floor(Math.random()*actions.ai.length)];
     dec=template(zone.replace(/_/g,' '),pct);
   }
   addCrowdDecision(dec);
@@ -692,34 +998,69 @@ function checkAndFireDecisions(){
 
 // ── KPI UPDATES ──────────────────────────────────────────────────────────────
 let att=72441;
+// Smoothly tween a numeric value to a target and flash the card on change.
+function tweenNumber(el, from, to, ms=600, fmt=(n)=>Math.round(n).toLocaleString()){
+  if(!el)return;
+  const card=el.closest('.kpi');
+  if(card){card.classList.remove('flash');void card.offsetWidth;card.classList.add('flash');}
+  const start=performance.now();
+  function step(t){
+    const k=Math.min(1,(t-start)/ms);
+    const eased=1-Math.pow(1-k,3);
+    el.textContent=fmt(from+(to-from)*eased);
+    if(k<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 function updateKPIs(){
-  att+=Math.round((Math.random()-.5)*12);
-  document.getElementById('kpi-att').textContent=att.toLocaleString();
-  document.getElementById('h-att').textContent=att.toLocaleString();
+  const next=att+Math.round((Math.random()-.5)*12);
+  tweenNumber(document.getElementById('kpi-att'), att, next);
+  document.getElementById('h-att').textContent=next.toLocaleString();
+  att=next;
   const evpm=Math.round(Math.random()*8+4);
-  document.getElementById('kpi-events').textContent=evpm;
+  const evEl=document.getElementById('kpi-events');
+  const prevEv=parseInt(evEl.textContent,10)||0;
+  tweenNumber(evEl, prevEv, evpm, 500);
   document.getElementById('h-events').textContent=evpm;
 }
 
 // ── EVENT LOG ────────────────────────────────────────────────────────────────
-const LOG_EVENTS=[
-  ['info','📡 Crowd density: Concourse North = 88% — threshold breached'],
-  ['warn','⏱️ Queue depth: Food Court North — 18 people (14 min wait)'],
-  ['ok','🚪 Gate South opened auxiliary lane — flow normalising'],
-  ['crit','🚨 Medical alert: Section 114, Row G — medic dispatched'],
-  ['info','🎥 CV anomaly detected: Gate B camera — Gemini Vision analysing'],
-  ['ok','🅿️ Parking Lot A: 92% — overflow Lot D activated'],
-  ['warn','👥 CrowdFlow rule: Concourse N → redirect signage updated'],
-  ['ok','📱 Attendee query: seat directions + food order placed'],
-  ['crit','⚡ Power draw Zone C: 98% — load balancing triggered'],
-  ['warn','🌡️ CO₂ elevated: Concourse S — HVAC adjustment applied'],
-  ['ok','🚌 3 extra shuttle buses dispatched — post-game prep'],
-  ['info','🤖 EmergencyAgent: Novel incident resolved via PA + EMS'],
-];
+const SCENARIO_LOGS={
+  Normal:[
+    ['info','📡 Crowd density: all zones within normal bands'],
+    ['ok','📱 Attendee query: seat directions + food order placed'],
+    ['info','🎥 CV sweep clean — no anomalies above 0.3'],
+    ['ok','🌡️ HVAC balanced across concourses'],
+    ['ok','👥 Wayfinding signage refresh complete'],
+  ],
+  Surge:[
+    ['crit','🚨 Crowd density: Gate North = 91% — threshold breached'],
+    ['warn','👥 CrowdFlow rule: Concourse N → redirect signage updated'],
+    ['ok','🚪 Gate South opened auxiliary lane — flow normalising'],
+    ['crit','🎥 CV anomaly detected: Gate B camera — Vision analysing'],
+    ['warn','⚡ Power draw Zone C: 94% — load balancing triggered'],
+    ['info','🤖 EmergencyAgent: surge mitigation routing active'],
+  ],
+  'Queue Peak':[
+    ['warn','⏱️ Queue depth: Food Court North — 22 people (16 min wait)'],
+    ['ok','🥨 Mobile vendor deployed to Food Court N'],
+    ['info','📱 38 attendees notified of shorter alternative queue'],
+    ['warn','⏱️ Queue depth: Food Court South — 14 people (9 min wait)'],
+    ['ok','🍔 Pre-order pickup lane opened'],
+  ],
+  'Post-Game':[
+    ['ok','🚌 3 extra shuttle buses dispatched — post-game prep'],
+    ['warn','🅿️ Parking Lot A: 96% — overflow Lot D activated'],
+    ['info','📣 PA: section-priority egress, Section 200s called'],
+    ['crit','🚨 Exit-surge model peaked at Gate North'],
+    ['ok','🚕 Rideshare pickup zone expanded'],
+  ],
+};
 let logIdx=0;
 function addLogEntry(){
   const mainLog=document.getElementById('main-log'); if(!mainLog)return;
-  const [type,msg]=LOG_EVENTS[logIdx%LOG_EVENTS.length];logIdx++;
+  const pool=SCENARIO_LOGS[SCENARIOS[scIdx].name]||SCENARIO_LOGS.Normal;
+  const [type,msg]=pool[logIdx%pool.length];logIdx++;
   const el=document.createElement('div');el.className=`log-entry ${type}`;
   const t=new Date();
   el.innerHTML=`<span class="log-time">${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}:${t.getSeconds().toString().padStart(2,'0')}</span>${msg}`;
@@ -728,47 +1069,453 @@ function addLogEntry(){
 }
 
 // ── CHAT ─────────────────────────────────────────────────────────────────────
-const CHAT_RESPONSES={
-  "where is my seat":"Your seat is **Section 110, Row G, Seat 14**. From Gate North, follow the blue signs to Level 2, then right to Section 110. About a 3-minute walk. 🗺️\n\nWould you like directions to the nearest restroom on the way?",
-  "shortest food queue":`Based on live data right now:\n\n• **Food Court South** — ~3 min wait ✅\n• **Food Court North** — ~14 min wait ⚠️\n• **Section 120 Kiosk** — ~2 min wait ✅ (nearest to you)\n\nI'd recommend the Section 120 kiosk — it's just 2 minutes from your seat!`,
-  "wheelchair":"Of course! I've notified our accessibility team right now. A staff member will meet you **within 3–5 minutes**. 🦽\n\nThe nearest accessible restroom is at Gate North Level 1. Can I help with anything else?",
-  "hot dog":"Order placed! 🌭\n\n**1× Classic Hot Dog** — $8.50\n📍 Delivery to **Section 110, Row G**\n⏱️ Ready in approximately **8 minutes**\n📋 Order ID: **A7F2**\n\nYou'll get a push notification when it's on its way. Enjoy the game! 🎉",
-};
-function getAIResponse(msg){
-  const l=msg.toLowerCase();
-  for(const [k,v] of Object.entries(CHAT_RESPONSES)){if(l.includes(k.split(' ')[0]))return v;}
-  const f=[
-    "Let me check that! Based on current venue data, your area looks fine. I can help with seat directions, food ordering, or accessibility support — what do you need?",
-    `Food Court South is the quietest right now — only ~3 min wait. Food Court North has a ~12 min queue. Shall I order something for your seat?`,
-    "Great question! All services are operational. I can find your seat, check queue times, or place a food order. What would you like?",
+// Intent-driven mock assistant. Remembers user's seat across turns.
+// Renders an SVG mini-map showing the route from the nearest gate to their section.
+
+const chatState = { seat: null, awaiting: null, lastIntent: null, turn: 0 };
+
+// Section → nearest gate mapping (12 sections around the bowl)
+// 100s = south, 200s = east, 300s = north, 400s = west
+function nearestGateForSection(section){
+  const s = parseInt(section,10)||110;
+  if (s>=100 && s<=199) return {id:'south', label:'Gate South', side:'south'};
+  if (s>=200 && s<=299) return {id:'east',  label:'Gate East',  side:'east'};
+  if (s>=300 && s<=399) return {id:'north', label:'Gate North', side:'north'};
+  if (s>=400 && s<=499) return {id:'west',  label:'Gate West',  side:'west'};
+  return {id:'north', label:'Gate North', side:'north'};
+}
+
+// Map a section number to angle on the bowl (degrees, 0 = east, 90 = south, etc.)
+function sectionAngle(section){
+  const s = parseInt(section,10)||110;
+  const tier = Math.floor(s/100); // 1-4
+  const within = (s % 100) / 100; // 0..1 within the tier
+  // Each tier owns 90°. Tier 1 (100s) = south = 60°–120°, Tier 2 = east = 330°–30°, etc.
+  const tierStart = {1:60, 2:330, 3:240, 4:150}[tier] ?? 60;
+  return (tierStart + within*60) % 360;
+}
+
+// Build a small SVG route map: stadium oval, 4 gates, user section highlighted, route arrow
+function buildRouteSvg(section, gate){
+  const W=280, H=180;
+  const cx=W/2, cy=H/2;
+  const rx=110, ry=70;
+  const gates = {
+    north: {x:cx, y:cy-ry-6, label:'GATE N'},
+    south: {x:cx, y:cy+ry+6, label:'GATE S'},
+    east:  {x:cx+rx+8, y:cy, label:'GATE E'},
+    west:  {x:cx-rx-8, y:cy, label:'GATE W'},
+  };
+  const g = gates[gate.id];
+  const ang = sectionAngle(section) * Math.PI/180;
+  // Section dot sits on the inner bowl ring
+  const sx = cx + Math.cos(ang) * (rx*.78);
+  const sy = cy + Math.sin(ang) * (ry*.78);
+  // Curved route control point — pulled toward bowl centre
+  const midx = (g.x + sx)/2 + (cx - (g.x+sx)/2)*0.5;
+  const midy = (g.y + sy)/2 + (cy - (g.y+sy)/2)*0.5;
+
+  // Gate dots — highlight active one
+  let gateDots = '';
+  Object.entries(gates).forEach(([id, gg])=>{
+    const active = id===gate.id;
+    gateDots += `<circle cx="${gg.x}" cy="${gg.y}" r="${active?7:4}" fill="${active?'#22c55e':'#475569'}" stroke="${active?'#22c55e':'none'}" stroke-width="${active?2:0}" opacity="${active?1:.55}"><animate attributeName="r" values="${active?'7;9;7':'4;4;4'}" dur="1.4s" repeatCount="indefinite"/></circle>`;
+    gateDots += `<text x="${gg.x}" y="${gg.y + (id==='north'?-12:id==='south'?16:4)}" text-anchor="middle" font-size="8" fill="${active?'#22c55e':'#64748b'}" font-weight="700" font-family="system-ui">${gg.label}</text>`;
+  });
+
+  // Other section labels scattered around the bowl perimeter for context (skip user's own + nearby duplicates)
+  const userSec = parseInt(section,10)||0;
+  const tiers = [
+    {base:100, count:5},  // south
+    {base:200, count:5},  // east
+    {base:300, count:5},  // north
+    {base:400, count:5},  // west
   ];
-  return f[Math.floor(Math.random()*f.length)];
+  const otherSections = [];
+  tiers.forEach(t=>{
+    for (let i=0;i<t.count;i++){
+      const n = t.base + 1 + Math.floor((i+Math.random()*.4)*(99/t.count));
+      if (Math.abs(n - userSec) < 4) continue; // don't clash with the user's section label
+      otherSections.push(n);
+    }
+  });
+  let sectionLabels = '';
+  otherSections.forEach(n=>{
+    const a = sectionAngle(n) * Math.PI/180;
+    // Slight radial jitter so the labels don't sit on a perfect ring
+    const jitter = 0.92 + Math.random()*0.16;
+    const lx = cx + Math.cos(a) * rx * jitter;
+    const ly = cy + Math.sin(a) * ry * jitter;
+    sectionLabels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="6.5" fill="rgba(140,170,200,.55)" font-family="system-ui" font-weight="600">${n}</text>`;
+    sectionLabels += `<circle cx="${lx.toFixed(1)}" cy="${(ly-2).toFixed(1)}" r="1.2" fill="rgba(140,170,200,.35)"/>`;
+  });
+
+  return `
+<svg viewBox="0 0 ${W} ${H}" class="route-map" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Route to Section ${section}">
+  <defs>
+    <linearGradient id="bowlBg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="rgba(0,170,255,.10)"/>
+      <stop offset="100%" stop-color="rgba(168,85,247,.06)"/>
+    </linearGradient>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#00aaff"/>
+    </marker>
+  </defs>
+  <!-- bowl -->
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#bowlBg)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx*.55}" ry="${ry*.55}" fill="rgba(34,197,94,.06)" stroke="rgba(34,197,94,.18)" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="${cx}" y="${cy+3}" text-anchor="middle" font-size="9" fill="rgba(120,160,200,.5)" font-family="system-ui">PITCH</text>
+  <!-- other section labels -->
+  ${sectionLabels}
+  <!-- route -->
+  <path d="M${g.x},${g.y} Q${midx},${midy} ${sx},${sy}" fill="none" stroke="#00aaff" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#arrowhead)" opacity=".85">
+    <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+  <!-- seat dot -->
+  <circle cx="${sx}" cy="${sy}" r="6" fill="#a855f7" stroke="#fff" stroke-width="2"/>
+  <circle cx="${sx}" cy="${sy}" r="10" fill="none" stroke="#a855f7" stroke-width="1.5" opacity=".5">
+    <animate attributeName="r" values="10;16;10" dur="1.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values=".5;0;.5" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <text x="${sx}" y="${sy - 12}" text-anchor="middle" font-size="9" fill="#a855f7" font-weight="700" font-family="system-ui">SEC ${section}</text>
+  ${gateDots}
+</svg>`;
 }
-async function typeMessage(el,text){
-  el.innerHTML='<div class="sender">VIS Assistant</div><span></span>';
-  const span=el.querySelector('span');
-  const plain=text.replace(/\*\*(.*?)\*\*/g,'$1');
+
+// Pull a seat reference out of free text — "section 110 row g seat 14" or "110-G-14" or "S110 G14"
+function parseSeat(msg){
+  const m = msg.toLowerCase();
+  // Try compact forms: 110-G-14, 110 G 14, sec110 rowG seat14
+  let secMatch = m.match(/(?:section|sec|s)\s*[#:]?\s*(\d{2,3})/);
+  let rowMatch = m.match(/(?:row|r)\s*[#:]?\s*([a-z]{1,2})/);
+  let seatMatch = m.match(/(?:seat|s)\s*[#:]?\s*(\d{1,3})\b/);
+  if (!secMatch) {
+    // Look for compact like "110 g 14" anywhere
+    const compact = m.match(/\b(\d{2,3})\s*[-\s]\s*([a-z])\s*[-\s]\s*(\d{1,3})\b/);
+    if (compact) return { section: compact[1], row: compact[2].toUpperCase(), seat: compact[3] };
+  }
+  if (!secMatch) return null;
+  return {
+    section: secMatch[1],
+    row: (rowMatch ? rowMatch[1] : 'G').toUpperCase(),
+    seat: seatMatch ? seatMatch[1] : '14',
+  };
+}
+
+const INTENTS = [
+  { id:'greeting', test:/^(hi|hey|hello|yo|sup|namaste)\b/i },
+  { id:'thanks',   test:/\b(thanks|thank you|thx|cheers|appreciate)\b/i },
+  { id:'seat',     test:/\b(seat|find\s*my\s*seat|where\s*am\s*i|directions?|navigate|how\s*do\s*i\s*get)\b/i },
+  { id:'food',     test:/\b(food|hungry|eat|orders?|pizza|hot\s*dog|burgers?|fries|snacks?|drinks?|water|beer|menu)\b/i },
+  { id:'restroom', test:/\b(restrooms?|bathrooms?|toilets?|washrooms?|loo)\b/i },
+  { id:'help',     test:/\b(wheelchair|accessib(le|ility)|elderly|help\s*needed|first\s*aid|medic|sick)\b/i },
+  { id:'queue',    test:/\b(queues?|waits?|lines?|how\s*long)\b/i },
+  { id:'exit',     test:/\b(exits?|leave|parking|cars?|uber|ride(?:share)?|taxi)\b/i },
+];
+
+function parseIntent(msg){
+  for (const it of INTENTS) if (it.test.test(msg)) return it.id;
+  return 'unknown';
+}
+
+function pickGreeting(){
+  const venueName = (typeof STADIUMS!=='undefined' && document.getElementById('stadium-picker'))
+    ? (STADIUMS.find(s=>s.id===document.getElementById('stadium-picker').value)?.name||'the venue')
+    : 'the venue';
+  return [
+    `Hey there! 👋 Welcome to ${venueName}. I can help you find your seat, order food, locate restrooms, or get accessibility support. What do you need?`,
+    `Hi! 🎟️ I'm your venue assistant for ${venueName}. Tell me your seat (like "Section 110 Row G Seat 14") and I'll guide you there.`,
+    `Hello! Enjoying the event so far? Drop me your seat info and I'll show you a map straight to it.`,
+  ][Math.floor(Math.random()*3)];
+}
+
+function buildResponse(msg){
+  chatState.turn++;
+  const intent = parseIntent(msg);
+  chatState.lastIntent = intent;
+
+  // If we're awaiting their seat from a prior turn, try to parse it first
+  if (chatState.awaiting === 'seat') {
+    const seat = parseSeat(msg);
+    if (seat){
+      chatState.seat = seat; chatState.awaiting = null;
+      return respondWithDirections(seat, true);
+    }
+    return { html: `I didn't catch a section number — try something like <strong>"Section 110, Row G, Seat 14"</strong> or just <strong>"110 G 14"</strong>. 🎫` };
+  }
+
+  // Allow seat info anywhere in the message to update memory
+  const inlineSeat = parseSeat(msg);
+  if (inlineSeat && !chatState.seat) chatState.seat = inlineSeat;
+
+  if (intent === 'greeting') return { html: pickGreeting() };
+  if (intent === 'thanks')   return { html: `You're welcome! 💙 Enjoy the rest of the event. Ping me anytime — food orders, restroom, exit routes, anything.` };
+
+  if (intent === 'seat') {
+    if (chatState.seat) return respondWithDirections(chatState.seat, false);
+    if (inlineSeat)     return respondWithDirections(inlineSeat, true);
+    chatState.awaiting = 'seat';
+    return { html: `Sure — what's your seat? Give me <strong>Section, Row, Seat</strong> (e.g. <em>"Section 110, Row G, Seat 14"</em>) and I'll draw you a route map. 🗺️` };
+  }
+
+  if (intent === 'food') {
+    const seatNote = chatState.seat ? ` to your seat (Sec ${chatState.seat.section}, Row ${chatState.seat.row})` : ' once you share your seat';
+    return { html:
+      `Quick read on right now:<br>• <strong>Food Court South</strong> — ~3 min wait ✅<br>• <strong>Food Court North</strong> — ~14 min wait ⚠️<br>• <strong>Section 120 Kiosk</strong> — ~2 min wait ✅<br><br>I can have something delivered${seatNote}. Try <em>"order a hot dog"</em> or <em>"order water"</em>.` };
+  }
+
+  if (intent === 'restroom') {
+    const dir = chatState.seat
+      ? `Nearest to Section ${chatState.seat.section}: <strong>Restroom ${chatState.seat.section[0]>='3'?'B (Concourse North)':'A (Concourse South)'}</strong> — about a 90-second walk.`
+      : `Tell me your section and I'll point you to the nearest one (usually 60–90 seconds away).`;
+    return { html: `🚻 ${dir}` };
+  }
+
+  if (intent === 'help') {
+    return { html: `On it. 🦽 I've notified the accessibility team — a staff member will reach you within <strong>3–5 minutes</strong>. ${chatState.seat?`They have your seat (Sec ${chatState.seat.section}).`:'Share your seat so they know exactly where to come.'} Need anything else right now?` };
+  }
+
+  if (intent === 'queue') {
+    return { html: `Live queue check 📊:<br>• Gate North — 4 min<br>• Gate South — <strong>1 min</strong> (quietest)<br>• Food Court North — 14 min<br>• Restroom A — 2 min` };
+  }
+
+  if (intent === 'exit') {
+    return { html: `When the event ends 🚗:<br>• <strong>Lot A</strong> (closest, currently 92% full — expect 8 min to clear)<br>• <strong>Lot D</strong> overflow is open — 4 min to exit<br>• Rideshare pickup: <strong>Gate East</strong>, ~3 min wait` };
+  }
+
+  // unknown — soft fallback that gently nudges back to known intents
+  return { html: `I can help with: 🎫 <strong>seat directions</strong>, 🍔 <strong>food orders</strong>, 🚻 <strong>restrooms</strong>, 🦽 <strong>accessibility</strong>, 📊 <strong>queue times</strong>, or 🚗 <strong>exits / parking</strong>. What do you need?` };
+}
+
+function respondWithDirections(seat, isNew){
+  const gate = nearestGateForSection(seat.section);
+  const svg = buildRouteSvg(seat.section, gate);
+  const lead = isNew
+    ? `Got it — <strong>Section ${seat.section}, Row ${seat.row}, Seat ${seat.seat}</strong>. Here's the fastest route:`
+    : `Heading back to <strong>Section ${seat.section}</strong>? Here you go:`;
+  const tail = `Enter via <strong>${gate.label}</strong> → follow the highlighted route on the bowl. About a 3-minute walk. 🗺️<br><br>Want me to find a <em>restroom</em> or <em>food court</em> on the way?`;
+  return { html: `${lead}<br>${svg}<br>${tail}` };
+}
+
+async function typeMessage(el, html){
+  // Type-in plain text first, then swap in the rich HTML (preserves SVG / strong tags)
+  el.innerHTML = '<div class="sender">VIS Assistant</div><div class="chat-body"><span class="typing"></span></div>';
+  const span = el.querySelector('span.typing');
+  // Strip HTML for the typewriter pass
+  const plain = html.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+  const scroller = el.closest('.chat-msgs');
   let i=0;
-  await new Promise(res=>{const iv=setInterval(()=>{if(i>=plain.length){clearInterval(iv);span.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');res();return;}span.textContent=plain.slice(0,++i);el.closest('.chat-msgs').scrollTop=9999;},16);});
+  await new Promise(res=>{
+    const iv = setInterval(()=>{
+      if (i >= plain.length){
+        clearInterval(iv);
+        el.querySelector('.chat-body').innerHTML = html;
+        if (scroller) scroller.scrollTop = 9999;
+        res();
+        return;
+      }
+      span.textContent = plain.slice(0, Math.min(plain.length, ++i + 2));
+      if (scroller) scroller.scrollTop = 9999;
+    }, 14);
+  });
 }
+
 async function sendChat(){
-  const input=document.getElementById('chat-input');
-  const msgs=document.getElementById('chat-msgs');
-  const msg=input.value.trim();if(!msg)return;input.value='';
-  const uEl=document.createElement('div');uEl.className='msg user';uEl.innerHTML=`<div class="sender">You</div>${msg}`;msgs.appendChild(uEl);msgs.scrollTop=9999;
-  await new Promise(r=>setTimeout(r,700));
-  const aEl=document.createElement('div');aEl.className='msg ai';aEl.innerHTML='<div class="sender">VIS Assistant</div>⠋ Thinking...';msgs.appendChild(aEl);msgs.scrollTop=9999;
-  await new Promise(r=>setTimeout(r,1000));
-  await typeMessage(aEl,getAIResponse(msg));
+  const input = document.getElementById('chat-input');
+  const msgs  = document.getElementById('chat-msgs');
+  const msg   = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const uEl = document.createElement('div');
+  uEl.className = 'msg user';
+  uEl.innerHTML = `<div class="sender">You</div>${msg.replace(/</g,'&lt;')}`;
+  msgs.appendChild(uEl); msgs.scrollTop = 9999;
+
+  await new Promise(r=>setTimeout(r, 500));
+  const aEl = document.createElement('div');
+  aEl.className = 'msg ai';
+  aEl.innerHTML = '<div class="sender">VIS Assistant</div><div class="chat-body"><span class="dots">⠋ Thinking…</span></div>';
+  msgs.appendChild(aEl); msgs.scrollTop = 9999;
+
+  await new Promise(r=>setTimeout(r, 650));
+  const { html } = buildResponse(msg);
+  await typeMessage(aEl, html);
 }
-function sendSuggestion(el){document.getElementById('chat-input').value=el.textContent;sendChat();}
+function sendSuggestion(el){ document.getElementById('chat-input').value = el.textContent; sendChat(); }
+
+// ── SURGE PREDICTION ─────────────────────────────────────────────────────────
+const ZONE_LABEL={gate_north:'Gate North',gate_south:'Gate South',concourse_north:'Concourse N',concourse_south:'Concourse S',food_north:'Food Court N',food_south:'Food Court S',seating_ne:'Seating NE',seating_e:'East Stand',seating_se:'Seating SE',seating_sw:'Seating SW',seating_w:'West Stand',seating_nw:'Seating NW'};
+function updateSurgePredictions(){
+  // Pick 3 zones with the highest trajectory toward critical (current density + future bump from next scenario)
+  const next=SCENARIOS[(scIdx+1)%SCENARIOS.length].densities;
+  const projections=Object.entries(zoneDensity).map(([z,cur])=>{
+    const target=next[z]??cur;
+    const delta=target-cur;
+    // Estimate seconds-to-threshold (85%) assuming linear interpolation over the next 300s
+    const projected=cur+delta*0.8;
+    let eta=null;
+    if(projected>=0.85 && delta>0.001){
+      eta=Math.max(20,Math.round(((0.85-cur)/delta)*300));
+    }
+    return {z,cur,projected,eta};
+  });
+  const ranked=projections.filter(p=>p.projected>=0.70).sort((a,b)=>b.projected-a.projected).slice(0,3);
+  const pool=ranked.length>0?ranked:projections.sort((a,b)=>b.projected-a.projected).slice(0,3);
+  const container=document.getElementById('surge-items');
+  container.innerHTML=pool.map(p=>{
+    const pct=Math.round(p.projected*100);
+    const cls=pct>=90?'crit':pct>=80?'warn':'ok';
+    const etaText=p.eta?`${Math.floor(p.eta/60)}:${String(p.eta%60).padStart(2,'0')}`:'stable';
+    const verb=p.eta?'will hit 85%':'projected peak';
+    return `<div class="ss-card"><div class="ss-eta ${cls}">${etaText}</div><div class="ss-body"><div><span class="ss-zone">${ZONE_LABEL[p.z]||p.z}</span> ${verb} → ${pct}%</div><div class="ss-meta">Recommend: ${pct>=90?'pre-deploy staff + open aux lane':pct>=80?'prep signage redirect':'monitor'}</div></div></div>`;
+  }).join('');
+  document.getElementById('ss-conf').textContent=Math.round(82+Math.random()*10)+'%';
+}
+
+// ── MULTI-AGENT NEGOTIATION ──────────────────────────────────────────────────
+const DEBATES=[
+  {topic:'Should Gate 2 be closed during the goal-rush surge?',
+   safety:{stance:'CLOSE',arg:'Crowd density at Gate 2 is 94%. Closure prevents crush risk.'},
+   operations:{stance:'ROTATE',arg:'Gate 2 ushers are at hour 7 of a 4-hour shift cap. Rotate fresh team in before closing.'},
+   experience:{stance:'PARTIAL',arg:'One-way flow through Gate 2 — 60% throughput, preserves satisfaction.'},
+   decision:'Adopt ExperienceAgent\'s one-way flow. OperationsAgent rotates 4 fresh ushers in. SafetyAgent veto held in reserve if density exceeds 96%.'},
+  {topic:'Halftime concourse is at 88% — pause queues or open additional flow lanes?',
+   safety:{stance:'PAUSE',arg:'Stationary queues bottleneck egress paths. Pause until density drops below 75%.'},
+   operations:{stance:'STAFFING-LIMITED',arg:'Only 6 ushers free in this sector — opening new lanes would over-stretch the team.'},
+   experience:{stance:'REROUTE',arg:'Push fans to Food Court S via signage — 5 min wait there vs 22 min here.'},
+   decision:'ExperienceAgent reroute adopted. OperationsAgent confirms 6 ushers can cover signage redirect without rotation breach.'},
+  {topic:'CV anomaly at Section 114 — dispatch security or send medical first?',
+   safety:{stance:'SECURITY',arg:'Anomaly score 0.82 with rapid clustering — could be altercation. Security first.'},
+   operations:{stance:'DUAL-LIGHT',arg:'On-shift medics down to 3 (one on break). Dispatch 1 medic + 2 security, not full teams.'},
+   experience:{stance:'MEDICAL',arg:'Cluster pattern matches medical-event history (87% similarity). EMS first.'},
+   decision:'Dual dispatch: 2 security + 1 EMS staged at Tunnel 114B. OperationsAgent flags reduced medic capacity for shift handover.'},
+  {topic:'Post-game exit surge in 12 min — open all 8 gates or stagger by section?',
+   safety:{stance:'ALL OPEN',arg:'Distributed egress reduces crush risk. Open all 8 gates simultaneously.'},
+   operations:{stance:'STAGGER',arg:'Only 22 gate staff on shift — staggered opening keeps each gate properly manned.'},
+   experience:{stance:'SECTION-BASED',arg:'PA-announced section release — fans feel guided, not rushed.'},
+   decision:'Hybrid: all 8 gates open, PA announces section-priority release every 90s. OperationsAgent re-balances staff between gates to maintain coverage.'},
+];
+let negIdx=0,negTypingTimer=null;
+function flashAgent(selector,stanceId,stanceText,argId,argText){
+  const card=document.querySelector(selector);
+  if(!card)return;
+  card.classList.remove('changed','active');void card.offsetWidth;
+  card.classList.add('active','changed');
+  document.getElementById(stanceId).textContent=stanceText;
+  document.getElementById(argId).textContent=argText;
+  setTimeout(()=>card.classList.remove('active'),1600);
+}
+function typeOrchestratorDecision(text){
+  if(negTypingTimer)clearInterval(negTypingTimer);
+  const el=document.getElementById('neg-decision');
+  el.textContent='';
+  let i=0;
+  negTypingTimer=setInterval(()=>{
+    if(i>=text.length){clearInterval(negTypingTimer);negTypingTimer=null;return;}
+    el.textContent+=text[i++];
+  },14);
+}
+function rotateNegotiation(){
+  const d=DEBATES[negIdx%DEBATES.length];negIdx++;
+  document.getElementById('neg-topic').textContent=d.topic;
+  // Sequential reveal: Safety → Operations → Experience, then Orchestrator types decision
+  flashAgent('.neg-agent.safety','neg-safety-stance',d.safety.stance,'neg-safety',d.safety.arg);
+  setTimeout(()=>flashAgent('.neg-agent.operations','neg-operations-stance',d.operations.stance,'neg-operations',d.operations.arg),350);
+  setTimeout(()=>flashAgent('.neg-agent.experience','neg-exp-stance',d.experience.stance,'neg-exp',d.experience.arg),700);
+  setTimeout(()=>typeOrchestratorDecision(d.decision),1100);
+  const t=new Date();
+  document.getElementById('neg-time').textContent=`${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}:${t.getSeconds().toString().padStart(2,'0')}`;
+}
+
+// ── STADIUM SELECTOR ─────────────────────────────────────────────────────────
+// Source: table.md — capacities are real; sensors/cameras scale (1 sensor / 250 seats, 1 camera / 750 seats)
+const STADIUMS = [
+  {id:'narendra-modi',  name:'Narendra Modi Stadium',  city:'Ahmedabad',     capacity:132000, gates:13, parking:3000, foodCourts:24},
+  {id:'eden-gardens',   name:'Eden Gardens',           city:'Kolkata',       capacity:68000,  gates:8,  parking:1500, foodCourts:14},
+  {id:'raipur',         name:'Shaheed VN Singh',       city:'Raipur',        capacity:65000,  gates:10, parking:1400, foodCourts:13},
+  {id:'dy-patil',       name:'DY Patil Stadium',       city:'Navi Mumbai',   capacity:55000,  gates:9,  parking:1200, foodCourts:12},
+  {id:'ekana',          name:'Ekana (BRSABV) Stadium', city:'Lucknow',       capacity:47165,  gates:8,  parking:1000, foodCourts:11},
+  {id:'barabati',       name:'Barabati Stadium',       city:'Cuttack',       capacity:45000,  gates:7,  parking:900,  foodCourts:10},
+  {id:'vidarbha',       name:'Vidarbha Stadium',       city:'Nagpur',        capacity:45000,  gates:7,  parking:900,  foodCourts:10},
+  {id:'arun-jaitley',   name:'Arun Jaitley Stadium',   city:'Delhi',         capacity:41000,  gates:6,  parking:800,  foodCourts:9},
+  {id:'jln-kochi',      name:'JLN Stadium',            city:'Kochi',         capacity:41000,  gates:6,  parking:800,  foodCourts:9},
+  {id:'chinnaswamy',    name:'M. Chinnaswamy Stadium', city:'Bengaluru',     capacity:40000,  gates:6,  parking:600,  foodCourts:8},
+  {id:'barsapara',      name:'Barsapara Stadium',      city:'Guwahati',      capacity:38000,  gates:6,  parking:700,  foodCourts:8},
+  {id:'chepauk',        name:'MA Chidambaram Stadium', city:'Chennai',       capacity:37505,  gates:5,  parking:700,  foodCourts:8},
+  {id:'mca-pune',       name:'MCA Stadium',            city:'Pune',          capacity:37000,  gates:5,  parking:700,  foodCourts:8},
+  {id:'wankhede',       name:'Wankhede Stadium',       city:'Mumbai',        capacity:33100,  gates:5,  parking:500,  foodCourts:7},
+  {id:'mohali',         name:'PCA IS Bindra Stadium',  city:'Mohali',        capacity:31150,  gates:6,  parking:600,  foodCourts:7},
+  {id:'sawai-mansingh', name:'Sawai Mansingh Stadium', city:'Jaipur',        capacity:30000,  gates:4,  parking:400,  foodCourts:6},
+  {id:'holkar',         name:'Holkar Stadium',         city:'Indore',        capacity:30000,  gates:5,  parking:500,  foodCourts:6},
+  {id:'saurashtra',     name:'Saurashtra Stadium',     city:'Rajkot',        capacity:28000,  gates:5,  parking:500,  foodCourts:6},
+  {id:'aca-vdca',       name:'ACA-VDCA Stadium',       city:'Visakhapatnam', capacity:27000,  gates:5,  parking:450,  foodCourts:6},
+  {id:'hpca',           name:'HPCA Stadium',           city:'Dharamshala',   capacity:21200,  gates:4,  parking:200,  foodCourts:5},
+  {id:'brabourne',      name:'Brabourne Stadium',      city:'Mumbai',        capacity:20000,  gates:4,  parking:300,  foodCourts:5},
+];
+STADIUMS.forEach(s=>{ s.sensors=Math.round(s.capacity/250); s.cameras=Math.round(s.capacity/750); });
+
+function formatCapDisplay(n,fmt){
+  if(fmt==='round-k') return (Math.round(n/1000)*1000).toLocaleString();
+  return n.toLocaleString();
+}
+function applyStadium(id, animate){
+  const s=STADIUMS.find(x=>x.id===id)||STADIUMS[0];
+  document.documentElement.setAttribute('data-stadium', s.id);
+  document.title=`VIS — ${s.name}`;
+  // KPI cards
+  const kpiAtt=document.getElementById('kpi-att');
+  const hAtt=document.getElementById('h-att');
+  if(kpiAtt){
+    const cur=parseInt((kpiAtt.textContent||'0').replace(/[^0-9]/g,''),10)||s.capacity;
+    if(animate && typeof tweenNumber==='function') tweenNumber(kpiAtt, cur, s.capacity, 900);
+    else kpiAtt.textContent=s.capacity.toLocaleString();
+  }
+  if(hAtt) hAtt.textContent=s.capacity.toLocaleString();
+  const kpiSensors=document.getElementById('kpi-sensors');if(kpiSensors) kpiSensors.textContent=s.sensors.toLocaleString();
+  const kpiCameras=document.getElementById('kpi-cameras');if(kpiCameras) kpiCameras.textContent=s.cameras.toLocaleString();
+  // Tween-source variable
+  if(typeof window.att!=='undefined') window.att=s.capacity;
+  att=s.capacity;
+  // Capacity displays in copy
+  document.querySelectorAll('[data-cap-display]').forEach(el=>{
+    el.textContent=formatCapDisplay(s.capacity, el.dataset.capFormat||'plain');
+  });
+  // Persist
+  try{localStorage.setItem('vis-stadium', s.id);}catch(_){}
+}
+(function initStadiumPicker(){
+  const picker=document.getElementById('stadium-picker');if(!picker)return;
+  picker.innerHTML=STADIUMS.map(s=>`<option value="${s.id}">🏟️ ${s.name} · ${s.city} (${Math.round(s.capacity/1000)}K)</option>`).join('');
+  const saved=localStorage.getItem('vis-stadium')||'narendra-modi';
+  picker.value=STADIUMS.some(s=>s.id===saved)?saved:'narendra-modi';
+  picker.addEventListener('change',()=>applyStadium(picker.value, true));
+})();
+
+// ── THEME TOGGLE ─────────────────────────────────────────────────────────────
+(function initTheme(){
+  const root=document.documentElement;
+  const current=root.getAttribute('data-theme')||'dark';
+  document.querySelectorAll('#theme-toggle button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.themeVal===current);
+  });
+  document.getElementById('theme-toggle').addEventListener('click',e=>{
+    const btn=e.target.closest('button[data-theme-val]');if(!btn)return;
+    const next=btn.dataset.themeVal;
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('vis-theme',next);}catch(_){}
+    document.querySelectorAll('#theme-toggle button').forEach(b=>b.classList.toggle('active',b.dataset.themeVal===next));
+  });
+})();
 
 // ── START EVERYTHING ─────────────────────────────────────────────────────────
 setInterval(updateZoneDensities, 2000);
 setInterval(updateKPIs, 2500);
-setInterval(checkAndFireDecisions, 5000);
-setInterval(addLogEntry, 3200);
-updateZoneDensities(); updateKPIs();
+setInterval(checkAndFireDecisions, 2500);
+setInterval(addLogEntry, 2000);
+setInterval(updateSurgePredictions, 6000);
+setInterval(rotateNegotiation, 8000);
+updateZoneDensities(); updateKPIs(); updateSurgePredictions();
+applyStadium(localStorage.getItem('vis-stadium')||'narendra-modi', false);
 setTimeout(()=>{addLogEntry();addLogEntry();addLogEntry();},500);
 </script>
 </body>

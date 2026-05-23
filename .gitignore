@@ -12,3 +12,7 @@ venv/
 *.log
 .DS_Store
 ?laude/
+
+# Firebase CLI local cache — regenerated on every deploy
+.firebase/
+firebase-debug.log
