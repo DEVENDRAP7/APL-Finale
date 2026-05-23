@@ -42,9 +42,12 @@ app.include_router(attendee.router)
 app.include_router(ops.router)
 
 
+_NOCACHE = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"}
+
+
 @app.get("/")
 async def root():
-    return FileResponse("public/index.html")
+    return FileResponse("public/index.html", headers=_NOCACHE)
 
 
 app.mount("/", StaticFiles(directory="public", html=True), name="static")

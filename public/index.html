@@ -72,7 +72,7 @@ section{padding:80px 40px;max-width:1300px;margin:0 auto}
 .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 
 /* Crowd Management Panel */
-.crowd-panel{background:var(--bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;max-height:560px}
+.crowd-panel{background:var(--bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;height:560px;position:sticky;top:16px}
 .crowd-panel-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;justify-content:space-between;align-items:center}
 .crowd-panel-title{font-size:.85rem;font-weight:700}
 .crowd-mode-badge{font-size:.65rem;padding:3px 10px;border-radius:12px;font-weight:600;letter-spacing:.5px}
@@ -105,6 +105,11 @@ section{padding:80px 40px;max-width:1300px;margin:0 auto}
 .kpi .v{font-size:1.6rem;font-weight:800;margin-bottom:4px}
 .kpi .l{font-size:.63rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .live-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:.72rem;padding:5px 12px;border-radius:20px;letter-spacing:1px}
+.scenario-picker{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:3px 3px 3px 10px}
+.scenario-picker .sc-label{font-size:.68rem;color:var(--muted);letter-spacing:1px;margin-right:6px;font-weight:600}
+.scenario-picker button{background:transparent;border:0;color:var(--muted);font-size:.72rem;font-weight:600;letter-spacing:.5px;padding:5px 10px;border-radius:5px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.scenario-picker button:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.scenario-picker button.active{background:var(--blue);color:#fff}
 
 /* Agents */
 .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;margin-top:48px}
@@ -247,12 +252,30 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div class="live-pill"><span class="pulse" style="background:var(--green)"></span>LIVE</div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.78rem;color:var(--muted)">Scenario: <span id="scenario-name" style="color:var(--blue);font-weight:600">NORMAL</span></div>
+        <div class="scenario-picker" id="scenario-picker" title="Active scenario">
+          <span class="sc-label">SCENARIO</span>
+          <button data-sc="auto" class="active">Auto</button>
+          <button data-sc="0">Normal</button>
+          <button data-sc="1">Surge</button>
+          <button data-sc="2">Queue Peak</button>
+          <button data-sc="3">Post-Game</button>
+        </div>
+        <span id="scenario-name" style="display:none">NORMAL</span>
       </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
-      <div class="zones-grid" id="zones-grid"></div>
+      <div>
+        <div class="zones-grid" id="zones-grid"></div>
+        <div class="dash-kpis" style="margin-top:20px">
+          <div class="kpi"><div class="v" id="kpi-att" style="color:var(--blue)">72,441</div><div class="l">Attendees</div></div>
+          <div class="kpi"><div class="v" id="kpi-alerts" style="color:var(--orange)">0</div><div class="l">Active Alerts</div></div>
+          <div class="kpi"><div class="v" id="kpi-events" style="color:var(--purple)">0</div><div class="l">Events / Min</div></div>
+          <div class="kpi"><div class="v" id="kpi-mode" style="color:var(--teal);font-size:1rem">IN EVENT</div><div class="l">Venue Mode</div></div>
+          <div class="kpi"><div class="v" id="kpi-sensors" style="color:var(--blue)">284</div><div class="l">Sensors Online</div></div>
+          <div class="kpi"><div class="v" id="kpi-cameras" style="color:var(--teal)">96</div><div class="l">Cameras Active</div></div>
+        </div>
+      </div>
 
       <!-- Crowd Management Panel -->
       <div class="crowd-panel">
@@ -269,15 +292,6 @@ footer p{color:var(--muted);font-size:.82rem;margin-top:6px}
       </div>
     </div>
 
-    <!-- KPI Strip -->
-    <div class="dash-kpis">
-      <div class="kpi"><div class="v" id="kpi-att" style="color:var(--blue)">72,441</div><div class="l">Attendees</div></div>
-      <div class="kpi"><div class="v" id="kpi-alerts" style="color:var(--orange)">0</div><div class="l">Active Alerts</div></div>
-      <div class="kpi"><div class="v" id="kpi-events" style="color:var(--purple)">0</div><div class="l">Events / Min</div></div>
-      <div class="kpi"><div class="v" id="kpi-mode" style="color:var(--teal);font-size:1rem">IN EVENT</div><div class="l">Venue Mode</div></div>
-      <div class="kpi"><div class="v" id="kpi-sensors" style="color:var(--blue)">284</div><div class="l">Sensors Online</div></div>
-      <div class="kpi"><div class="v" id="kpi-cameras" style="color:var(--teal)">96</div><div class="l">Cameras Active</div></div>
-    </div>
   </div>
 </div>
 
@@ -570,7 +584,7 @@ const SCENARIOS = [
     densities:{gate_north:.96,concourse_north:.92,seating_ne:.85,seating_e:.78,seating_se:.80,food_north:.30,gate_south:.94,concourse_south:.90,seating_sw:.82,seating_w:.76,seating_nw:.79,food_south:.28}
   },
 ];
-let scIdx=0, tick=0;
+let scIdx=0, tick=0, scManual=false;
 
 function updateZoneDensities(){
   const sc=SCENARIOS[scIdx];
@@ -582,11 +596,32 @@ function updateZoneDensities(){
   document.getElementById('kpi-mode').textContent=sc.name.toUpperCase();
   updateZoneCards();
   tick++;
-  if(tick>=30){tick=0;scIdx=(scIdx+1)%SCENARIOS.length;}
+  if(!scManual && tick>=30){tick=0;scIdx=(scIdx+1)%SCENARIOS.length;}
 }
 
+function syncPickerActive(){
+  const target=scManual?String(scIdx):'auto';
+  document.querySelectorAll('#scenario-picker button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.sc===target);
+  });
+}
+
+document.getElementById('scenario-picker').addEventListener('click',e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  document.querySelectorAll('#scenario-picker button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const v=btn.dataset.sc;
+  if(v==='auto'){scManual=false;}
+  else{scManual=true;scIdx=parseInt(v,10);tick=0;}
+  updateZoneDensities();
+  checkAndFireDecisions();
+});
+
 // ── CROWD MANAGEMENT FEED ────────────────────────────────────────────────────
-let autoCount=0, aiCount=0, alertCount=0;
+// AUTO ACTIONS = Rule Engine decisions (fast, deterministic — ~80% of all decisions)
+// AI ACTIONS   = Agent decisions (Emergency / Vision — judgement calls, ~20%)
+// We rotate 4 rule → 1 AI to make the split visible immediately.
+let autoCount=0, aiCount=0, alertCount=0, decisionTick=0;
 
 const RULE_ACTIONS = [
   (z,p) => ({type:'rule', text:`Redirecting crowd from ${z} (${p}%) → adjacent gate via digital signage`, zone:z}),
@@ -635,10 +670,11 @@ function checkAndFireDecisions(){
   const pool=critZones.length>0?critZones:allZones.sort((a,b)=>b.pct-a.pct).slice(0,3);
   const {zone,pct}=pool[Math.floor(Math.random()*pool.length)];
 
-  // Pick action type
-  const roll=Math.random();
+  // Pick action type — deterministic 4:1 rotation (rule:AI) for visible 80/20 split
+  decisionTick++;
+  const isRule = (decisionTick % 5) !== 0;
   let dec;
-  if(roll<0.65){
+  if(isRule){
     const template=RULE_ACTIONS[Math.floor(Math.random()*RULE_ACTIONS.length)];
     dec=template(zone.replace(/_/g,' '),pct);
     // Add routing arrow on stadium
@@ -730,7 +766,7 @@ function sendSuggestion(el){document.getElementById('chat-input').value=el.textC
 // ── START EVERYTHING ─────────────────────────────────────────────────────────
 setInterval(updateZoneDensities, 2000);
 setInterval(updateKPIs, 2500);
-setInterval(checkAndFireDecisions, 3500);
+setInterval(checkAndFireDecisions, 5000);
 setInterval(addLogEntry, 3200);
 updateZoneDensities(); updateKPIs();
 setTimeout(()=>{addLogEntry();addLogEntry();addLogEntry();},500);
